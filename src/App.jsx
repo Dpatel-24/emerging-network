@@ -399,7 +399,9 @@ export default function App() {
           vintage: r.fields['Vintage Year'] || '',
           stage: r.fields['Stage'] || '',
           thesis: r.fields['Thesis'] || '',
-          industries: r.fields['Industries'] || '',
+          industries: Array.isArray(r.fields['Industries'])
+            ? r.fields['Industries'].join(', ')
+            : (r.fields['Industries'] || ''),
           city: r.fields['City'] || '',
           state: r.fields['State'] || '',
           website: r.fields['Website'] || '',
