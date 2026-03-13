@@ -13,18 +13,19 @@ const TYPE_COLORS = {
   'Angel Group':     '#be185d',
 };
 
-// City positions in 960x600 Albers USA projected space (us-atlas standard)
+// Coordinates in us-atlas 960x600 Albers USA space
+// Austin intentionally offset slightly south of NOLA for visual clarity
 const CITY_COORDS = {
-  'New Orleans':    [720, 451],
-  'Baton Rouge':    [701, 444],
-  'Tampa':          [790, 471],
-  'Miami':          [812, 501],
-  'Nashville':      [730, 368],
-  'Austin':         [554, 454],
-  'Salt Lake City': [298, 304],
+  'New Orleans':    [720, 441],
+  'Baton Rouge':    [701, 436],
+  'Tampa':          [790, 468],
+  'Miami':          [812, 498],
+  'Nashville':      [730, 360],
+  'Austin':         [554, 462],
+  'Salt Lake City': [298, 298],
 };
 
-// us-atlas topojson is pre-projected at 960x600 — just delta-decode
+// us-atlas topojson is pre-projected to 960x600 — delta-decode only, no re-projection
 function decodeTopojson(topo) {
   try {
     const { arcs, transform: { scale: [sx, sy], translate: [tx, ty] } } = topo;
@@ -41,7 +42,10 @@ function decodeTopojson(topo) {
       const polys = g.type === 'Polygon' ? [g.arcs] : g.arcs;
       return { id: g.id, d: polys.map(poly => poly.map(ringToPath).join('')).join('') };
     });
-  } catch (e) { console.error(e); return []; }
+  } catch (e) {
+    console.error('topo decode:', e);
+    return [];
+  }
 }
 
 function parseFundSize(s) {
@@ -68,8 +72,8 @@ function Sel({ value, onChange, options }) {
   return (
     <select value={value} onChange={e => onChange(e.target.value)} style={{
       background: 'transparent', border: '1px solid #1a1a1a', padding: '7px 26px 7px 11px',
-      fontSize: 11, letterSpacing: 0.5, fontFamily: '"DM Mono", monospace', cursor: 'pointer',
-      appearance: 'none', color: '#1a1a1a', minWidth: 130,
+      fontSize: 11, fontFamily: '"DM Mono", monospace', cursor: 'pointer',
+      appearance: 'none', color: '#1a1a1a', minWidth: 128,
       backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%231a1a1a'/%3E%3C/svg%3E")`,
       backgroundRepeat: 'no-repeat', backgroundPosition: 'right 8px center',
     }}>
@@ -88,9 +92,9 @@ function FundCard({ fund, onClick }) {
         color: hov ? '#faf6f0' : '#1a1a1a', transition: 'all 0.12s', height: '100%' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 9 }}>
         <span style={{ fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', color: hov ? '#aaa' : color, fontWeight: 500 }}>{fund.type}</span>
-        <span style={{ fontSize: 10, letterSpacing: 0.5, opacity: 0.5 }}>{fund.city}, {fund.state}</span>
+        <span style={{ fontSize: 10, opacity: 0.5 }}>{fund.city}, {fund.state}</span>
       </div>
-      <div style={{ fontFamily: '"Playfair Display", serif', fontSize: 16, fontWeight: 700, marginBottom: 8, lineHeight: 1.3 }}>
+      <div style={{ fontFamily: '"Raleway", sans-serif', fontSize: 16, fontWeight: 700, marginBottom: 8, lineHeight: 1.3 }}>
         {fund.name}
       </div>
       {fund.thesis && (
@@ -99,7 +103,7 @@ function FundCard({ fund, onClick }) {
           {fund.thesis}
         </div>
       )}
-      <div style={{ display: 'flex', gap: 14, fontSize: 11, letterSpacing: 0.5, opacity: 0.5, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 14, fontSize: 11, opacity: 0.5, flexWrap: 'wrap' }}>
         {fund.stage && <span>▸ {fund.stage}</span>}
         {bucket !== 'N/A' && <span>{bucket}</span>}
         {fund.vintage && <span>Est. {fund.vintage}</span>}
@@ -124,8 +128,8 @@ function DetailPanel({ fund, onClose }) {
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 22, lineHeight: 1, color: '#1a1a1a', padding: 0 }}>×</button>
         </div>
         <div style={{ padding: '26px 28px', overflowY: 'auto', flex: 1 }}>
-          <h2 style={{ fontFamily: '"Playfair Display", serif', fontSize: 24, fontWeight: 700, margin: '0 0 5px', lineHeight: 1.2 }}>{fund.name}</h2>
-          <div style={{ fontSize: 12, color: '#888', marginBottom: 24, letterSpacing: 0.5 }}>{fund.city}, {fund.state}</div>
+          <h2 style={{ fontFamily: '"Raleway", sans-serif', fontSize: 24, fontWeight: 700, margin: '0 0 5px', lineHeight: 1.2 }}>{fund.name}</h2>
+          <div style={{ fontSize: 12, color: '#888', marginBottom: 24 }}>{fund.city}, {fund.state}</div>
           {fund.thesis && (
             <div style={{ marginBottom: 22 }}>
               <div style={{ fontSize: 9, letterSpacing: 3, textTransform: 'uppercase', color: '#999', marginBottom: 8 }}>THESIS</div>
@@ -135,7 +139,7 @@ function DetailPanel({ fund, onClose }) {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 20px', marginBottom: 22 }}>
             {[
               ['Stage', fund.stage],
-              ['Fund Size', bucket !== 'N/A' ? `${fund.size}  ·  ${bucket}` : (fund.size || '')],
+              ['Fund Size', fund.size ? `${fund.size}  ·  ${bucket}` : ''],
               ['Vintage', fund.vintage ? `Est. ${fund.vintage}` : ''],
               ['GP / Manager', fund.gp],
             ].filter(([, v]) => v).map(([label, val]) => (
@@ -150,7 +154,7 @@ function DetailPanel({ fund, onClose }) {
               <div style={{ fontSize: 9, letterSpacing: 3, textTransform: 'uppercase', color: '#999', marginBottom: 8 }}>SECTORS</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {fund.industries.split(',').map(i => i.trim()).filter(Boolean).map(i => (
-                  <span key={i} style={{ border: `1px solid ${color}`, color, fontSize: 10, padding: '3px 9px', letterSpacing: 0.5 }}>{i}</span>
+                  <span key={i} style={{ border: `1px solid ${color}`, color, fontSize: 10, padding: '3px 9px' }}>{i}</span>
                 ))}
               </div>
             </div>
@@ -189,23 +193,21 @@ function DetailPanel({ fund, onClose }) {
 
 function DirectoryTab({ funds, loading, error, search, setSearch, cityFilter, setCityFilter,
   typeFilter, setTypeFilter, stageFilter, setStageFilter, sectorFilter, setSectorFilter,
-  sizeFilter, setSizeFilter, cities, types, stages, sectors, selected, setSelected }) {
+  sizeFilter, setSizeFilter, cities, types, stages, sectors, selected, setSelected, onClearAll, hasActiveFilters }) {
   return (
     <div>
       <div style={{ padding: '12px 48px', borderBottom: '1px solid #d4cfc7', display: 'flex', gap: 8,
         alignItems: 'center', flexWrap: 'wrap', background: '#f0ebe3' }}>
-        {/* Search with clear button */}
+        {/* Search with inline clear */}
         <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search funds, thesis, sectors…"
-            style={{ background: 'transparent', border: '1px solid #1a1a1a', padding: '7px 32px 7px 12px',
+            style={{ background: 'transparent', border: '1px solid #1a1a1a', padding: '7px 34px 7px 12px',
               fontSize: 11, fontFamily: '"DM Mono", monospace', outline: 'none',
               minWidth: 240, color: '#1a1a1a' }} />
           {search && (
             <button onClick={() => setSearch('')}
               style={{ position: 'absolute', right: 8, background: 'none', border: 'none',
-                cursor: 'pointer', fontSize: 16, lineHeight: 1, color: '#999', padding: 0 }}>
-              ×
-            </button>
+                cursor: 'pointer', fontSize: 17, lineHeight: 1, color: '#999', padding: 0 }}>×</button>
           )}
         </div>
         <Sel value={cityFilter} onChange={setCityFilter} options={cities} />
@@ -213,6 +215,18 @@ function DirectoryTab({ funds, loading, error, search, setSearch, cityFilter, se
         <Sel value={stageFilter} onChange={setStageFilter} options={stages} />
         <Sel value={sizeFilter} onChange={setSizeFilter} options={SIZE_BUCKETS} />
         <Sel value={sectorFilter} onChange={setSectorFilter} options={sectors} />
+
+        {/* Dedicated CLEAR ALL button */}
+        {hasActiveFilters && (
+          <button onClick={onClearAll} style={{
+            background: 'none', border: '1px solid #c8302a', color: '#c8302a',
+            padding: '7px 14px', fontSize: 10, letterSpacing: 2, textTransform: 'uppercase',
+            fontFamily: '"DM Mono", monospace', cursor: 'pointer',
+          }}>
+            CLEAR ALL
+          </button>
+        )}
+
         <span style={{ marginLeft: 'auto', fontSize: 11, opacity: 0.4 }}>
           {!loading && `${funds.length} results`}
         </span>
@@ -240,7 +254,7 @@ function DirectoryTab({ funds, loading, error, search, setSearch, cityFilter, se
   );
 }
 
-function NetworkTab({ funds, mapPaths }) {
+function NetworkTab({ funds, mapPaths, mapLoaded }) {
   const [hovered, setHovered] = useState(null);
   const [selectedFund, setSelectedFund] = useState(null);
   const [mapCity, setMapCity] = useState(null);
@@ -256,20 +270,44 @@ function NetworkTab({ funds, mapPaths }) {
 
   return (
     <div style={{ display: 'flex', height: 'calc(100vh - 110px)', overflow: 'hidden' }}>
+      {/* Map area */}
       <div style={{ flex: 1, padding: '16px 20px 12px', display: 'flex', flexDirection: 'column', minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
-          <span style={{ fontSize: 9, letterSpacing: 4, textTransform: 'uppercase', color: '#888' }}>CAPITAL NETWORK — UNITED STATES</span>
+          <span style={{ fontSize: 9, letterSpacing: 4, textTransform: 'uppercase', color: '#888' }}>
+            CAPITAL NETWORK — UNITED STATES
+          </span>
           <div style={{ marginLeft: 'auto' }}>
             <Sel value={typeFilter} onChange={setTypeFilter} options={['All Types', ...Object.keys(TYPE_COLORS)]} />
           </div>
         </div>
-        <div style={{ flex: 1, minHeight: 0, border: '1px solid #ddd8d0', overflow: 'hidden' }}>
-          <svg viewBox="30 20 900 540" style={{ width: '100%', height: '100%', display: 'block', background: '#f5f0e8' }}
-            preserveAspectRatio="xMidYMid meet">
-            {mapPaths.length > 0
-              ? mapPaths.map(({ id, d }) => <path key={id} d={d} fill="#e8e1d5" stroke="#c4bdb0" strokeWidth="0.5" strokeLinejoin="round" />)
-              : <rect x="30" y="20" width="900" height="540" fill="#e8e1d5" stroke="#c4bdb0" strokeWidth="1" rx="4" />
-            }
+
+        {/* SVG map — full 960x600 us-atlas coordinate space */}
+        <div style={{ flex: 1, minHeight: 0, border: '1px solid #ddd8d0', overflow: 'hidden', position: 'relative' }}>
+          <svg
+            viewBox="0 0 960 600"
+            style={{ width: '100%', height: '100%', display: 'block', background: '#f5f0e8' }}
+            preserveAspectRatio="xMidYMid meet"
+          >
+            {/* State fills */}
+            {mapPaths.length > 0 ? (
+              mapPaths.map(({ id, d }) => (
+                <path key={id} d={d} fill="#e8e1d5" stroke="#c4bdb0" strokeWidth="0.6" strokeLinejoin="round" />
+              ))
+            ) : (
+              /* Simplified fallback outline of continental US */
+              <g>
+                <rect x="70" y="60" width="700" height="420" rx="8" fill="#e8e1d5" stroke="#c4bdb0" strokeWidth="1" />
+                {/* Alaska box */}
+                <rect x="70" y="440" width="160" height="120" rx="4" fill="#e8e1d5" stroke="#c4bdb0" strokeWidth="1" />
+                {/* Hawaii box */}
+                <rect x="240" y="500" width="120" height="60" rx="4" fill="#e8e1d5" stroke="#c4bdb0" strokeWidth="1" />
+                <text x="480" y="270" textAnchor="middle" fontSize="13" fill="#c4bdb0" fontFamily='"DM Mono", monospace' letterSpacing="2">
+                  LOADING MAP…
+                </text>
+              </g>
+            )}
+
+            {/* City dots */}
             {Object.entries(cityClusters).map(([city, cityFunds]) => {
               const coords = CITY_COORDS[city];
               if (!coords) return null;
@@ -288,20 +326,26 @@ function NetworkTab({ funds, mapPaths }) {
                   onMouseEnter={() => setHovered(city)}
                   onMouseLeave={() => setHovered(null)}>
                   {sel && <circle r={r + 9} fill="none" stroke={dotColor} strokeWidth="1.2" opacity="0.3" />}
-                  <circle r={r} fill={dotColor} opacity={sel ? 1 : hov ? 0.9 : 0.72}
-                    stroke="#faf6f0" strokeWidth={sel ? 2.5 : 1.5} style={{ transition: 'all 0.15s' }} />
-                  <text textAnchor="middle" dy="0.35em" fontSize={count > 9 ? 9 : 11}
-                    fontFamily='"DM Mono", monospace' fontWeight="700" fill="#faf6f0" style={{ pointerEvents: 'none' }}>
+                  <circle r={r} fill={dotColor}
+                    opacity={sel ? 1 : hov ? 0.9 : 0.75}
+                    stroke="#faf6f0" strokeWidth={sel ? 2.5 : 1.5}
+                    style={{ transition: 'all 0.15s' }} />
+                  <text textAnchor="middle" dy="0.35em"
+                    fontSize={count > 9 ? 9 : 11}
+                    fontFamily='"DM Mono", monospace' fontWeight="700"
+                    fill="#faf6f0" style={{ pointerEvents: 'none' }}>
                     {count}
                   </text>
-                  <text textAnchor="middle" dy={r + 13} fontSize="8.5" fontFamily='"DM Mono", monospace'
-                    letterSpacing="1" fill="#1a1a1a" opacity={sel || hov ? 0.9 : 0.5} style={{ pointerEvents: 'none' }}>
+                  <text textAnchor="middle" dy={r + 14} fontSize="8.5"
+                    fontFamily='"DM Mono", monospace' letterSpacing="1"
+                    fill="#1a1a1a" opacity={sel || hov ? 0.9 : 0.5}
+                    style={{ pointerEvents: 'none' }}>
                     {city.toUpperCase()}
                   </text>
+                  {/* Hover tooltip */}
                   {hov && (
                     <g transform={`translate(0,${-r - 22})`} style={{ pointerEvents: 'none' }}>
-                      <rect x={-(city.length * 3.5 + 28)} y={-9} rx="2"
-                        width={(city.length * 3.5 + 28) * 2 + 16} height={18} fill="#1a1a1a" />
+                      <rect x={-70} y={-10} width={140} height={20} rx="2" fill="#1a1a1a" />
                       <text textAnchor="middle" fontSize="10" fontFamily='"DM Mono", monospace' fill="#faf6f0" dy="4">
                         {city} · {count} fund{count !== 1 ? 's' : ''}
                       </text>
@@ -312,25 +356,30 @@ function NetworkTab({ funds, mapPaths }) {
             })}
           </svg>
         </div>
+
+        {/* Legend */}
         <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', marginTop: 10 }}>
           {Object.entries(TYPE_COLORS).map(([type, color]) => (
             <div key={type} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 10,
               opacity: typeFilter === 'All Types' || typeFilter === type ? 0.75 : 0.2 }}>
-              <div style={{ width: 9, height: 9, borderRadius: '50%', background: color }} />{type}
+              <div style={{ width: 9, height: 9, borderRadius: '50%', background: color, flexShrink: 0 }} />
+              {type}
             </div>
           ))}
         </div>
       </div>
+
+      {/* Right panel */}
       <div style={{ width: 320, borderLeft: '2px solid #1a1a1a', display: 'flex', flexDirection: 'column', background: '#f0ebe3', flexShrink: 0 }}>
         {mapCity ? (
           <>
             <div style={{ padding: '16px 20px', borderBottom: '1px solid #d4cfc7', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
-                <div style={{ fontFamily: '"Playfair Display", serif', fontSize: 17, fontWeight: 700 }}>{mapCity}</div>
+                <div style={{ fontFamily: '"Raleway", sans-serif', fontSize: 17, fontWeight: 700 }}>{mapCity}</div>
                 <div style={{ fontSize: 10, opacity: 0.4, marginTop: 3 }}>{mapFunds.length} fund{mapFunds.length !== 1 ? 's' : ''}</div>
               </div>
               <button onClick={() => setMapCity(null)} style={{ background: 'none', border: '1px solid #bbb',
-                cursor: 'pointer', width: 26, height: 26, fontSize: 14, fontFamily: '"DM Mono", monospace',
+                cursor: 'pointer', width: 26, height: 26, fontSize: 14,
                 color: '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
             </div>
             <div style={{ flex: 1, overflowY: 'auto' }}>
@@ -342,7 +391,7 @@ function NetworkTab({ funds, mapPaths }) {
                     onMouseEnter={e => e.currentTarget.style.background = '#e5dfd6'}
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                     <div style={{ fontSize: 9.5, letterSpacing: 2, textTransform: 'uppercase', color, marginBottom: 4, fontWeight: 500 }}>{f.type}</div>
-                    <div style={{ fontFamily: '"Playfair Display", serif', fontSize: 14.5, fontWeight: 700, marginBottom: 4 }}>{f.name}</div>
+                    <div style={{ fontFamily: '"Raleway", sans-serif', fontSize: 14.5, fontWeight: 700, marginBottom: 4 }}>{f.name}</div>
                     <div style={{ fontSize: 11, opacity: 0.45, display: 'flex', gap: 10 }}>
                       {f.stage && <span>{f.stage}</span>}
                       {f.size && f.size.startsWith('$') && <span>{f.size}</span>}
@@ -354,13 +403,14 @@ function NetworkTab({ funds, mapPaths }) {
           </>
         ) : (
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 40, textAlign: 'center', opacity: 0.35 }}>
-            <div style={{ fontSize: 36, marginBottom: 14, fontFamily: 'serif' }}>◎</div>
+            <div style={{ fontSize: 36, marginBottom: 14 }}>◎</div>
             <div style={{ fontSize: 10, letterSpacing: 3, textTransform: 'uppercase', lineHeight: 2.2 }}>
               SELECT A CITY<br />TO EXPLORE<br />CAPITAL FLOWS
             </div>
           </div>
         )}
       </div>
+
       {selectedFund && <DetailPanel fund={selectedFund} onClose={() => setSelectedFund(null)} />}
     </div>
   );
@@ -379,6 +429,7 @@ export default function App() {
   const [sizeFilter, setSizeFilter] = useState('All Sizes');
   const [selected, setSelected] = useState(null);
   const [mapPaths, setMapPaths] = useState([]);
+  const [mapLoaded, setMapLoaded] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -417,7 +468,9 @@ export default function App() {
 
   useEffect(() => {
     fetch('https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json')
-      .then(r => r.json()).then(t => setMapPaths(decodeTopojson(t))).catch(() => {});
+      .then(r => r.json())
+      .then(t => { setMapPaths(decodeTopojson(t)); setMapLoaded(true); })
+      .catch(e => { console.error('Map fetch failed:', e); setMapLoaded(false); });
   }, []);
 
   const cities  = ['All Cities',  ...[...new Set(funds.map(f => f.city).filter(Boolean))].sort()];
@@ -426,6 +479,14 @@ export default function App() {
   const sectors = ['All Sectors', ...[...new Set(
     funds.flatMap(f => f.industries.split(',').map(s => s.trim()).filter(Boolean))
   )].sort()];
+
+  const hasActiveFilters = search || cityFilter !== 'All Cities' || typeFilter !== 'All Types' ||
+    stageFilter !== 'All Stages' || sizeFilter !== 'All Sizes' || sectorFilter !== 'All Sectors';
+
+  const clearAll = () => {
+    setSearch(''); setCityFilter('All Cities'); setTypeFilter('All Types');
+    setStageFilter('All Stages'); setSizeFilter('All Sizes'); setSectorFilter('All Sectors');
+  };
 
   const filtered = funds.filter(f => {
     const bucket = fundSizeBucket(f.size);
@@ -439,13 +500,10 @@ export default function App() {
     );
   });
 
-  const now = new Date();
-  const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
-
   return (
     <div style={{ minHeight: '100vh', background: '#faf6f0', fontFamily: '"DM Mono", monospace', color: '#1a1a1a' }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Playfair+Display:wght@600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Raleway:wght@600;700;800&display=swap');
         * { box-sizing: border-box; }
         ::-webkit-scrollbar { width: 3px; }
         ::-webkit-scrollbar-track { background: #faf6f0; }
@@ -457,51 +515,48 @@ export default function App() {
 
       {/* Header */}
       <header style={{ borderBottom: '2px solid #1a1a1a', background: '#faf6f0', display: 'flex', alignItems: 'stretch', minHeight: 72 }}>
-        
-        {/* Left: Logo block */}
+
+        {/* Logo — clickable home */}
         <div style={{ padding: '0 40px', display: 'flex', flexDirection: 'column', justifyContent: 'center',
-          borderRight: '1px solid #1a1a1a', minWidth: 280, cursor: 'pointer' }}
-          onClick={() => { setTab('directory'); setSearch(''); setCityFilter('All Cities'); setTypeFilter('All Types'); setStageFilter('All Stages'); setSectorFilter('All Sectors'); setSizeFilter('All Sizes'); }}>
-          <div style={{ fontSize: 8, letterSpacing: 5, textTransform: 'uppercase', color: '#c8302a', marginBottom: 5, fontWeight: 500 }}>
+          borderRight: '1px solid #1a1a1a', minWidth: 260, cursor: 'pointer', userSelect: 'none' }}
+          onClick={() => { setTab('directory'); clearAll(); }}>
+          <div style={{ fontSize: 8, letterSpacing: 5, textTransform: 'uppercase', color: '#c8302a', marginBottom: 5, fontWeight: 500, fontFamily: '"DM Mono", monospace' }}>
             EMERGING CAPITAL ///
           </div>
-          <h1 style={{ margin: 0, fontSize: 20, fontFamily: '"Playfair Display", serif', fontWeight: 700, letterSpacing: -0.5, lineHeight: 1 }}>
+          <h1 style={{ margin: 0, fontSize: 21, fontFamily: '"Raleway", sans-serif', fontWeight: 800, letterSpacing: -0.5, lineHeight: 1 }}>
             US Capital Directory
           </h1>
         </div>
 
-        {/* Center: Status ticker */}
-        <div style={{ flex: 1, padding: '0 32px', display: 'flex', alignItems: 'center', gap: 28, borderRight: '1px solid #1a1a1a' }}>
+        {/* Stats ticker */}
+        <div style={{ flex: 1, padding: '0 32px', display: 'flex', alignItems: 'center', gap: 32, borderRight: '1px solid #1a1a1a' }}>
           <div>
-            <div style={{ fontSize: 8.5, letterSpacing: 2, color: '#999', marginBottom: 3 }}>STATUS</div>
-            <div style={{ fontSize: 11, display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ width: 7, height: 7, borderRadius: '50%', background: loading ? '#f59e0b' : error ? '#c8302a' : '#22c55e', display: 'inline-block', flexShrink: 0 }} />
+            <div style={{ fontSize: 8.5, letterSpacing: 2, color: '#999', marginBottom: 3, fontFamily: '"DM Mono", monospace' }}>STATUS</div>
+            <div style={{ fontSize: 11, display: 'flex', alignItems: 'center', gap: 7, fontFamily: '"DM Mono", monospace' }}>
+              <span style={{ width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
+                background: loading ? '#f59e0b' : error ? '#c8302a' : '#22c55e',
+                boxShadow: !loading && !error ? '0 0 6px #22c55e' : 'none',
+              }} />
               {loading ? 'Fetching…' : error ? 'Error' : 'Live'}
             </div>
           </div>
           {!loading && !error && (
             <>
-              <div>
-                <div style={{ fontSize: 8.5, letterSpacing: 2, color: '#999', marginBottom: 3 }}>FUNDS</div>
-                <div style={{ fontSize: 18, fontFamily: '"Playfair Display", serif', fontWeight: 700 }}>{funds.length}</div>
-              </div>
-              <div>
-                <div style={{ fontSize: 8.5, letterSpacing: 2, color: '#999', marginBottom: 3 }}>CITIES</div>
-                <div style={{ fontSize: 18, fontFamily: '"Playfair Display", serif', fontWeight: 700 }}>
-                  {[...new Set(funds.map(f => f.city))].filter(Boolean).length}
+              {[
+                ['FUNDS', funds.length],
+                ['CITIES', [...new Set(funds.map(f => f.city))].filter(Boolean).length],
+                ['STATES', [...new Set(funds.map(f => f.state))].filter(Boolean).length],
+              ].map(([label, val]) => (
+                <div key={label}>
+                  <div style={{ fontSize: 8.5, letterSpacing: 2, color: '#999', marginBottom: 3, fontFamily: '"DM Mono", monospace' }}>{label}</div>
+                  <div style={{ fontSize: 20, fontFamily: '"Raleway", sans-serif', fontWeight: 800, lineHeight: 1 }}>{val}</div>
                 </div>
-              </div>
-              <div>
-                <div style={{ fontSize: 8.5, letterSpacing: 2, color: '#999', marginBottom: 3 }}>STATES</div>
-                <div style={{ fontSize: 18, fontFamily: '"Playfair Display", serif', fontWeight: 700 }}>
-                  {[...new Set(funds.map(f => f.state))].filter(Boolean).length}
-                </div>
-              </div>
+              ))}
             </>
           )}
         </div>
 
-        {/* Right: Nav tabs */}
+        {/* Nav tabs */}
         <nav style={{ display: 'flex', alignItems: 'stretch' }}>
           {['directory', 'network'].map(t => (
             <button key={t} onClick={() => setTab(t)} style={{
@@ -525,8 +580,9 @@ export default function App() {
             sectorFilter={sectorFilter} setSectorFilter={setSectorFilter}
             sizeFilter={sizeFilter} setSizeFilter={setSizeFilter}
             cities={cities} types={types} stages={stages} sectors={sectors}
-            selected={selected} setSelected={setSelected} />
-        : <NetworkTab funds={funds} mapPaths={mapPaths} />
+            selected={selected} setSelected={setSelected}
+            onClearAll={clearAll} hasActiveFilters={hasActiveFilters} />
+        : <NetworkTab funds={funds} mapPaths={mapPaths} mapLoaded={mapLoaded} />
       }
     </div>
   );
