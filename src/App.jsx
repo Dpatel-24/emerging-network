@@ -785,16 +785,24 @@ function MapTab({ funds, mapPaths }) {
 
   return (
     <div style={{display:'flex',height:'calc(100vh - 74px)',overflow:'hidden'}}>
-      {/* Map */}
-      <div style={{flex:1,padding:'16px 20px 12px',display:'flex',flexDirection:'column',minWidth:0}}>
-        <div style={{fontSize:9,letterSpacing:4,textTransform:'uppercase',color:'#888',marginBottom:10}}>
+      {/* Map column */}
+      <div style={{flex:1,padding:'16px 20px 12px',display:'flex',flexDirection:'column',minWidth:0,overflow:'hidden'}}>
+        <div style={{fontSize:9,letterSpacing:4,textTransform:'uppercase',color:'#888',marginBottom:10,flexShrink:0}}>
           EMERGING CAPITAL REGIONS — UNITED STATES
         </div>
-        <div style={{flex:1,minHeight:0,border:'1px solid #ddd8d0',overflow:'hidden',background:'#f5f0e8',position:'relative'}}>
-          <svg viewBox="0 0 960 600" preserveAspectRatio="xMidYMid meet"
-            style={{position:'absolute',top:0,left:0,width:'100%',height:'100%',display:'block'}}>
 
-            {/* Non-region states */}
+        {/* SVG container — explicit height so the SVG always fills correctly */}
+        <div style={{
+          height:'calc(100vh - 74px - 120px)',
+          border:'1px solid #ddd8d0',
+          overflow:'hidden',
+          background:'#f5f0e8',
+          flexShrink:0,
+        }}>
+          <svg viewBox="0 0 960 600" preserveAspectRatio="xMidYMid meet"
+            style={{width:'100%',height:'100%',display:'block'}}>
+
+            {/* Non-region states (grayed out) */}
             {otherPaths.map(({fips,d})=>(
               <path key={fips} d={d} fill="#ddd8ce" stroke="#c8c2b8" strokeWidth="0.5" strokeLinejoin="round" />
             ))}
@@ -819,12 +827,12 @@ function MapTab({ funds, mapPaths }) {
               );
             })}
 
-            {/* State borders within regions (subtle white lines) */}
+            {/* State borders within regions */}
             {mapPaths.filter(({fips})=>FIPS_REGION[fips]).map(({fips,d})=>(
-              <path key={`b-${fips}`} d={d} fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="0.6" strokeLinejoin="round" />
+              <path key={`b-${fips}`} d={d} fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="0.7" strokeLinejoin="round" />
             ))}
 
-            {/* Region labels */}
+            {/* Region count bubbles + labels */}
             {Object.entries(REGION_LABEL).map(([region,[cx,cy]])=>{
               const count   = funds.filter(f=>f.region===region).length;
               const isActive= activeRegion===region;
@@ -833,13 +841,13 @@ function MapTab({ funds, mapPaths }) {
               const visible = isActive||isHov||!activeRegion;
               return (
                 <g key={`lbl-${region}`} style={{pointerEvents:'none',opacity:visible?1:0.25,transition:'opacity 0.18s'}}>
-                  <text x={cx} y={cy-7} textAnchor="middle" fontSize="8"
+                  <text x={cx} y={cy-8} textAnchor="middle" fontSize="8"
                     fontFamily='"DM Mono",monospace' fontWeight="500" letterSpacing="1.5"
-                    fill={isActive?'#fff':'#1a1a1a'} opacity={isActive?0.9:0.65}>
+                    fill={isActive?'#fff':'#1a1a1a'} opacity={isActive?0.9:0.7}>
                     {region.toUpperCase()}
                   </text>
-                  <circle cx={cx} cy={cy+10} r={13} fill={isActive?'#fff':color} opacity={isActive?0.95:0.9} />
-                  <text x={cx} y={cy+10} textAnchor="middle" dy="0.35em" fontSize="11"
+                  <circle cx={cx} cy={cy+10} r={14} fill={isActive?'#fff':color} opacity={isActive?0.95:0.9} />
+                  <text x={cx} y={cy+10} textAnchor="middle" dy="0.35em" fontSize="12"
                     fontFamily='"Raleway",sans-serif' fontWeight="800"
                     fill={isActive?color:'#fff'}>
                     {count}
@@ -1092,6 +1100,83 @@ export default function App() {
       {tab==='partners' && <PartnersTab partners={partners} loading={loading} />}
       {tab==='pulse'    && <PulseTab    events={events} dispatches={dispatch} loading={loading} />}
       {tab==='map'      && <MapTab      funds={funds} mapPaths={mapPaths} />}
+
+      {/* ── Footer ── */}
+      <footer style={{borderTop:'2px solid #1a1a1a',background:'#1a1a1a',color:'#faf6f0',fontFamily:'"DM Mono",monospace'}}>
+        {/* About strip */}
+        <div style={{borderBottom:'1px solid rgba(255,255,255,0.1)',padding:'48px 64px',
+          display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:48}}>
+
+          {/* Mission */}
+          <div>
+            <div style={{fontSize:8,letterSpacing:5,textTransform:'uppercase',color:'#c8302a',marginBottom:12,fontWeight:600}}>
+              EMERGING CAPITAL ///
+            </div>
+            <h2 style={{fontFamily:'"Raleway",sans-serif',fontSize:22,fontWeight:800,
+              margin:'0 0 16px',lineHeight:1.15,letterSpacing:-0.5}}>
+              The directory for capital outside the coasts.
+            </h2>
+            <p style={{fontSize:12,lineHeight:1.85,opacity:0.55,margin:0}}>
+              Emerging Capital is a curated intelligence layer for the startup ecosystems that don't make TechCrunch. We track the funds, investors, and ecosystem partners building the next generation of companies in the Gulf South, Southeast, Texas, Mountain West, and beyond.
+            </p>
+          </div>
+
+          {/* What we are */}
+          <div>
+            <div style={{fontSize:9,letterSpacing:3,textTransform:'uppercase',color:'#888',marginBottom:16}}>WHAT WE ARE</div>
+            <div style={{display:'flex',flexDirection:'column',gap:14}}>
+              {[
+                ['CAPITAL','A curated directory of venture funds, accelerators, family offices, and economic development organizations across emerging US markets.'],
+                ['INVESTORS','Individual GP and partner profiles linking people to funds — because capital flows through relationships, not spreadsheets.'],
+                ['PARTNERS','Vetted ecosystem services for founders: the lawyers, CFOs, brand studios, and community builders who actually understand startups.'],
+                ['PULSE','Upcoming events and editorial dispatches on what\'s happening across the regions we cover.'],
+              ].map(([label,desc])=>(
+                <div key={label}>
+                  <div style={{fontSize:9,letterSpacing:2,fontWeight:600,color:'#c8302a',marginBottom:4}}>{label}</div>
+                  <div style={{fontSize:11,lineHeight:1.7,opacity:0.5}}>{desc}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Quick links + stats */}
+          <div>
+            <div style={{fontSize:9,letterSpacing:3,textTransform:'uppercase',color:'#888',marginBottom:16}}>NAVIGATE</div>
+            <div style={{display:'flex',flexDirection:'column',gap:8,marginBottom:32}}>
+              {[['CAPITAL',()=>setTab('capital')],['PARTNERS',()=>setTab('partners')],['PULSE',()=>setTab('pulse')],['MAP',()=>setTab('map')]].map(([l,fn])=>(
+                <button key={l} onClick={fn} style={{background:'none',border:'none',padding:0,
+                  cursor:'pointer',fontSize:11,letterSpacing:2,textTransform:'uppercase',
+                  color:'#faf6f0',opacity:0.6,textAlign:'left',fontFamily:'"DM Mono",monospace',
+                  outline:'none'}}
+                  onMouseEnter={e=>e.currentTarget.style.opacity='1'}
+                  onMouseLeave={e=>e.currentTarget.style.opacity='0.6'}>
+                  → {l}
+                </button>
+              ))}
+            </div>
+            {!loading && (
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
+                {[['FUNDS',funds.length],['INVESTORS',investors.length],['PARTNERS',partners.length],['REGIONS',[...new Set(funds.map(f=>f.region).filter(Boolean))].length]].map(([l,v])=>(
+                  <div key={l}>
+                    <div style={{fontSize:8,letterSpacing:2,color:'#666',marginBottom:3}}>{l}</div>
+                    <div style={{fontSize:24,fontFamily:'"Raleway",sans-serif',fontWeight:800,lineHeight:1}}>{v}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Bottom bar */}
+        <div style={{padding:'16px 64px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+          <div style={{fontSize:10,opacity:0.3}}>
+            © {new Date().getFullYear()} Emerging Capital. Curated, not scraped.
+          </div>
+          <div style={{fontSize:10,opacity:0.3,letterSpacing:1}}>
+            emerging.network
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
