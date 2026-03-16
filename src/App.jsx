@@ -141,15 +141,14 @@ function MultiSelect({ label, options, selected, onChange }) {
     <div ref={ref} style={{position:'relative',display:'inline-block'}}>
       <button onMouseDown={e=>{e.preventDefault();setOpen(o=>!o)}} style={{
         background:active?'#1a1a1a':'transparent',color:active?'#faf6f0':'#1a1a1a',
-        border:'1px solid #1a1a1a',padding:'7px 26px 7px 11px',
+        border:'1px solid #1a1a1a',padding:'7px 11px',
         fontSize:11,fontFamily:'"DM Mono",monospace',cursor:'pointer',
-        minWidth:118,textAlign:'left',outline:'none',
-        backgroundImage:active
-          ?`url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23faf6f0'/%3E%3C/svg%3E")`
-          :`url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%231a1a1a'/%3E%3C/svg%3E")`,
-        backgroundRepeat:'no-repeat',backgroundPosition:'right 8px center',
+        minWidth:118,outline:'none',WebkitAppearance:'none',appearance:'none',
+        userSelect:'none',WebkitUserSelect:'none',MozUserSelect:'none',
+        display:'flex',alignItems:'center',justifyContent:'space-between',gap:6,
       }}>
-        <span style={{display:'block',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',maxWidth:100}}>{lbl}</span>
+        <span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',maxWidth:100,flex:1}}>{lbl}</span>
+        <span style={{fontSize:9,flexShrink:0,lineHeight:1}}>▾</span>
       </button>
       {open && (
         <div style={{position:'absolute',top:'100%',left:0,zIndex:300,
@@ -204,7 +203,7 @@ function SlidePanel({ onClose, children }) {
 }
 
 // ─── Fund detail panel ────────────────────────────────────────────────────────
-function FundPanel({ fund, onClose }) {
+function FundPanel({ fund, onClose, investors=[], onSelectInvestor }) {
   const color = TYPE_COLORS[fund.type]||'#888';
   const bucket = fundSizeBucket(fund.size);
   const gps = [
@@ -212,6 +211,9 @@ function FundPanel({ fund, onClose }) {
     fund.gp2?{name:fund.gp2,li:fund.gp2li}:null,
     fund.gp3?{name:fund.gp3,li:fund.gp3li}:null,
   ].filter(Boolean);
+  const linkedInvestors = investors.filter(inv =>
+    inv.fund && fund.name && inv.fund.toLowerCase().trim() === fund.name.toLowerCase().trim()
+  );
   return (
     <SlidePanel onClose={onClose}>
       <div style={{padding:'16px 28px',borderBottom:'1px solid #1a1a1a',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
@@ -247,6 +249,28 @@ function FundPanel({ fund, onClose }) {
             ))}
           </div>
         )}
+        {linkedInvestors.length>0 && (
+          <div style={{marginBottom:20}}>
+            <div style={{fontSize:9,letterSpacing:3,textTransform:'uppercase',color:'#999',marginBottom:10}}>TEAM ON FILE</div>
+            {linkedInvestors.map(inv=>(
+              <div key={inv.id} onClick={()=>onSelectInvestor&&onSelectInvestor(inv)}
+                style={{display:'flex',alignItems:'center',gap:12,padding:'10px 12px',
+                  marginBottom:6,border:'1px solid #e8e3db',cursor:'pointer',background:'#faf6f0'}}
+                onMouseEnter={e=>e.currentTarget.style.background='#f0ebe3'}
+                onMouseLeave={e=>e.currentTarget.style.background='#faf6f0'}>
+                <div style={{width:32,height:32,borderRadius:'50%',background:'#1a1a1a',display:'flex',
+                  alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                  <span style={{color:'#faf6f0',fontFamily:'"Raleway",sans-serif',fontWeight:800,fontSize:13}}>{(inv.name||'?')[0]}</span>
+                </div>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontSize:13,fontWeight:600,fontFamily:'"Raleway",sans-serif'}}>{inv.name}</div>
+                  <div style={{fontSize:10,opacity:0.5}}>{inv.title}</div>
+                </div>
+                <span style={{fontSize:10,opacity:0.35}}>→</span>
+              </div>
+            ))}
+          </div>
+        )}
         {fund.industries && (
           <div style={{marginBottom:20}}>
             <div style={{fontSize:9,letterSpacing:3,textTransform:'uppercase',color:'#999',marginBottom:8}}>SECTORS</div>
@@ -268,7 +292,10 @@ function FundPanel({ fund, onClose }) {
 }
 
 // ─── Investor detail panel ────────────────────────────────────────────────────
-function InvestorPanel({ inv, onClose }) {
+function InvestorPanel({ inv, onClose, funds=[], onSelectFund }) {
+  const linkedFund = funds.find(f =>
+    f.name && inv.fund && f.name.toLowerCase().trim() === inv.fund.toLowerCase().trim()
+  );
   return (
     <SlidePanel onClose={onClose}>
       <div style={{padding:'16px 28px',borderBottom:'1px solid #1a1a1a',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
@@ -295,6 +322,31 @@ function InvestorPanel({ inv, onClose }) {
               {inv.portfolio.split(',').map(c=>c.trim()).filter(Boolean).map(c=>(
                 <span key={c} style={{border:'1px solid #1a1a1a',fontSize:10,padding:'3px 9px'}}>{c}</span>
               ))}
+            </div>
+          </div>
+        )}
+        {linkedFund && (
+          <div style={{marginBottom:20}}>
+            <div style={{fontSize:9,letterSpacing:3,textTransform:'uppercase',color:'#999',marginBottom:10}}>ABOUT THEIR FUND</div>
+            <div onClick={()=>onSelectFund&&onSelectFund(linkedFund)}
+              style={{padding:'14px 16px',border:'1px solid #e8e3db',cursor:'pointer',background:'#faf6f0'}}
+              onMouseEnter={e=>e.currentTarget.style.background='#f0ebe3'}
+              onMouseLeave={e=>e.currentTarget.style.background='#faf6f0'}>
+              <div style={{fontSize:10,letterSpacing:2,textTransform:'uppercase',
+                color:TYPE_COLORS[linkedFund.type]||'#888',fontWeight:500,marginBottom:4}}>{linkedFund.type}</div>
+              <div style={{fontFamily:'"Raleway",sans-serif',fontSize:15,fontWeight:700,marginBottom:6}}>{linkedFund.name}</div>
+              {linkedFund.thesis && (
+                <div style={{fontSize:12,lineHeight:1.65,opacity:0.65,marginBottom:8,
+                  display:'-webkit-box',WebkitLineClamp:3,WebkitBoxOrient:'vertical',overflow:'hidden'}}>
+                  {linkedFund.thesis}
+                </div>
+              )}
+              <div style={{display:'flex',gap:12,fontSize:11,opacity:0.45}}>
+                {linkedFund.stage && <span>{linkedFund.stage}</span>}
+                {linkedFund.size && linkedFund.size.startsWith('$') && <span>{linkedFund.size}</span>}
+                {linkedFund.region && <span>{linkedFund.region}</span>}
+              </div>
+              <div style={{fontSize:10,opacity:0.3,marginTop:8,textAlign:'right'}}>View Fund →</div>
             </div>
           </div>
         )}
@@ -551,8 +603,12 @@ function CapitalTab({ funds, investors, loading }) {
               emptyMsg="NO INVESTORS" />
         }
       </div>
-      {selected && view==='funds'     && <FundPanel     fund={selected}    onClose={()=>setSelected(null)} />}
-      {selected && view==='investors' && <InvestorPanel inv={selected}     onClose={()=>setSelected(null)} />}
+      {selected && view==='funds'     && <FundPanel     fund={selected}    onClose={()=>setSelected(null)}
+        investors={investors}
+        onSelectInvestor={inv=>{ setView('investors'); setSelected(inv); }} />}
+      {selected && view==='investors' && <InvestorPanel inv={selected}     onClose={()=>setSelected(null)}
+        funds={funds}
+        onSelectFund={f=>{ setView('funds'); setSelected(f); }} />}
     </div>
   );
 }
@@ -734,7 +790,7 @@ function MapTab({ funds, mapPaths }) {
         <div style={{fontSize:9,letterSpacing:4,textTransform:'uppercase',color:'#888',marginBottom:10}}>
           EMERGING CAPITAL REGIONS — UNITED STATES
         </div>
-        <div style={{flex:1,minHeight:0,border:'1px solid #ddd8d0',position:'relative',background:'#f5f0e8'}}>
+        <div style={{flex:1,minHeight:0,border:'1px solid #ddd8d0',overflow:'hidden',background:'#f5f0e8',position:'relative'}}>
           <svg viewBox="0 0 960 600" preserveAspectRatio="xMidYMid meet"
             style={{position:'absolute',top:0,left:0,width:'100%',height:'100%',display:'block'}}>
 
@@ -978,6 +1034,7 @@ export default function App() {
         ::-webkit-scrollbar-thumb { background:#1a1a1a; }
         input::placeholder { opacity:0.38; }
         button:focus { outline:none; }
+        button:active { -webkit-tap-highlight-color: transparent; }
         a { text-decoration:none; }
       `}</style>
 
@@ -989,10 +1046,10 @@ export default function App() {
         <div onClick={()=>setTab('capital')}
           style={{padding:'0 40px',display:'flex',flexDirection:'column',justifyContent:'center',
             borderRight:'1px solid #1a1a1a',minWidth:260,cursor:'pointer',userSelect:'none'}}>
-          <div style={{fontSize:8,letterSpacing:5,textTransform:'uppercase',color:'#c8302a',marginBottom:5,fontWeight:500}}>
+          <div style={{fontSize:10,letterSpacing:4,textTransform:'uppercase',color:'#c8302a',marginBottom:5,fontWeight:600}}>
             EMERGING CAPITAL ///
           </div>
-          <h1 style={{margin:0,fontSize:21,fontFamily:'"Raleway",sans-serif',fontWeight:800,letterSpacing:-0.5,lineHeight:1}}>
+          <h1 style={{margin:0,fontSize:22,fontFamily:'"Raleway",sans-serif',fontWeight:800,letterSpacing:-0.5,lineHeight:1}}>
             US Capital Directory
           </h1>
         </div>
