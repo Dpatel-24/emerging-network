@@ -13,7 +13,7 @@ const TYPE_COLORS = {
   'Angel Group':     '#be185d',
 };
 
-// Albers USA 960x600 projected coordinates (us-atlas@3 standard)
+// Albers USA 960×600 — these match the us-atlas@3 pre-projected coordinate space
 const CITY_COORDS = {
   'New Orleans':    [704, 449],
   'Baton Rouge':    [688, 442],
@@ -61,7 +61,7 @@ function fundSizeBucket(s) {
 }
 const SIZE_BUCKETS = ['Micro (<$10M)', 'Small ($10–50M)', 'Mid ($50–150M)', 'Large ($150M+)'];
 
-// ─── Multi-select dropdown ───────────────────────────────────────────────────
+// ─── Multi-select dropdown ────────────────────────────────────────────────────
 function MultiSelect({ label, options, selected, onChange }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
@@ -72,28 +72,30 @@ function MultiSelect({ label, options, selected, onChange }) {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  const toggle = val => {
+  const toggle = val =>
     onChange(selected.includes(val) ? selected.filter(v => v !== val) : [...selected, val]);
-  };
+
   const count = selected.length;
   const displayLabel = count === 0 ? label : count === 1 ? selected[0] : `${label} (${count})`;
+  const active = count > 0;
 
   return (
     <div ref={ref} style={{ position: 'relative', display: 'inline-block' }}>
       <button
-        onClick={() => setOpen(o => !o)}
+        onMouseDown={e => { e.preventDefault(); setOpen(o => !o); }}
         style={{
-          background: count > 0 ? '#1a1a1a' : 'transparent',
-          color: count > 0 ? '#faf6f0' : '#1a1a1a',
+          background: active ? '#1a1a1a' : 'transparent',
+          color: active ? '#faf6f0' : '#1a1a1a',
           border: '1px solid #1a1a1a',
           padding: '7px 26px 7px 11px',
           fontSize: 11, fontFamily: '"DM Mono", monospace',
           cursor: 'pointer', minWidth: 128, textAlign: 'left',
-          backgroundImage: count > 0
+          outline: 'none', WebkitTapHighlightColor: 'transparent',
+          backgroundImage: active
             ? `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23faf6f0'/%3E%3C/svg%3E")`
             : `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%231a1a1a'/%3E%3C/svg%3E")`,
-          backgroundRepeat: 'no-repeat', backgroundPosition: 'right 8px center',
-          position: 'relative',
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'right 8px center',
         }}
       >
         <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 106 }}>
@@ -103,13 +105,13 @@ function MultiSelect({ label, options, selected, onChange }) {
       {open && (
         <div style={{
           position: 'absolute', top: '100%', left: 0, zIndex: 200,
-          background: '#faf6f0', border: '1px solid #1a1a1a',
-          borderTop: 'none', minWidth: 200, maxHeight: 280, overflowY: 'auto',
+          background: '#faf6f0', border: '1px solid #1a1a1a', borderTop: 'none',
+          minWidth: 200, maxHeight: 280, overflowY: 'auto',
           boxShadow: '0 4px 20px rgba(0,0,0,0.12)',
         }}>
           {count > 0 && (
             <div
-              onClick={() => { onChange([]); setOpen(false); }}
+              onMouseDown={e => { e.preventDefault(); onChange([]); setOpen(false); }}
               style={{ padding: '8px 12px', fontSize: 10, letterSpacing: 2, color: '#c8302a',
                 cursor: 'pointer', borderBottom: '1px solid #e8e3db', textTransform: 'uppercase' }}
               onMouseEnter={e => e.currentTarget.style.background = '#f5f0e8'}
@@ -118,33 +120,39 @@ function MultiSelect({ label, options, selected, onChange }) {
               CLEAR SELECTION
             </div>
           )}
-          {options.map(opt => (
-            <div key={opt} onClick={() => toggle(opt)}
-              style={{ padding: '8px 12px', fontSize: 11, fontFamily: '"DM Mono", monospace',
-                cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
-                background: selected.includes(opt) ? '#1a1a1a' : 'transparent',
-                color: selected.includes(opt) ? '#faf6f0' : '#1a1a1a',
-              }}
-              onMouseEnter={e => { if (!selected.includes(opt)) e.currentTarget.style.background = '#f0ebe3'; }}
-              onMouseLeave={e => { if (!selected.includes(opt)) e.currentTarget.style.background = 'transparent'; }}
-            >
-              <span style={{
-                width: 12, height: 12, border: `1px solid ${selected.includes(opt) ? '#faf6f0' : '#1a1a1a'}`,
-                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 9, flexShrink: 0,
-              }}>
-                {selected.includes(opt) ? '✓' : ''}
-              </span>
-              {opt}
-            </div>
-          ))}
+          {options.map(opt => {
+            const isSelected = selected.includes(opt);
+            return (
+              <div key={opt}
+                onMouseDown={e => { e.preventDefault(); toggle(opt); }}
+                style={{
+                  padding: '8px 12px', fontSize: 11, fontFamily: '"DM Mono", monospace',
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
+                  background: isSelected ? '#1a1a1a' : 'transparent',
+                  color: isSelected ? '#faf6f0' : '#1a1a1a',
+                  userSelect: 'none',
+                }}
+                onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = '#f0ebe3'; }}
+                onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = 'transparent'; }}
+              >
+                <span style={{
+                  width: 12, height: 12, flexShrink: 0, display: 'inline-flex',
+                  alignItems: 'center', justifyContent: 'center', fontSize: 9,
+                  border: `1px solid ${isSelected ? '#faf6f0' : '#1a1a1a'}`,
+                }}>
+                  {isSelected ? '✓' : ''}
+                </span>
+                {opt}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
   );
 }
 
-// ─── Fund card ───────────────────────────────────────────────────────────────
+// ─── Fund card ────────────────────────────────────────────────────────────────
 function FundCard({ fund, onClick }) {
   const [hov, setHov] = useState(false);
   const color = TYPE_COLORS[fund.type] || '#888';
@@ -177,7 +185,7 @@ function FundCard({ fund, onClick }) {
   );
 }
 
-// ─── Detail panel ────────────────────────────────────────────────────────────
+// ─── Detail panel ─────────────────────────────────────────────────────────────
 function DetailPanel({ fund, onClose }) {
   if (!fund) return null;
   const color = TYPE_COLORS[fund.type] || '#888';
@@ -199,7 +207,7 @@ function DetailPanel({ fund, onClose }) {
           display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontSize: 10, letterSpacing: 2.5, textTransform: 'uppercase', color, fontWeight: 500 }}>{fund.type}</span>
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer',
-            fontSize: 22, lineHeight: 1, color: '#1a1a1a', padding: 0 }}>×</button>
+            fontSize: 22, lineHeight: 1, color: '#1a1a1a', padding: 0, outline: 'none' }}>×</button>
         </div>
         <div style={{ padding: '26px 28px', overflowY: 'auto', flex: 1 }}>
           <h2 style={{ fontFamily: '"Raleway", sans-serif', fontSize: 24, fontWeight: 700,
@@ -226,7 +234,6 @@ function DetailPanel({ fund, onClose }) {
             ))}
           </div>
 
-          {/* General Partners */}
           {gps.length > 0 && (
             <div style={{ marginBottom: 22 }}>
               <div style={{ fontSize: 9, letterSpacing: 3, textTransform: 'uppercase', color: '#999', marginBottom: 10 }}>
@@ -239,8 +246,7 @@ function DetailPanel({ fund, onClose }) {
                     {gp.linkedin && (
                       <a href={gp.linkedin} target="_blank" rel="noopener noreferrer"
                         style={{ fontSize: 10, letterSpacing: 1.5, textTransform: 'uppercase',
-                          color, borderBottom: `1px solid ${color}`, textDecoration: 'none',
-                          paddingBottom: 1 }}>
+                          color, borderBottom: `1px solid ${color}`, textDecoration: 'none', paddingBottom: 1 }}>
                         LinkedIn
                       </a>
                     )}
@@ -264,28 +270,25 @@ function DetailPanel({ fund, onClose }) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 20 }}>
             {fund.website && (
               <a href={fund.website} target="_blank" rel="noopener noreferrer"
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 8,
-                  padding: '10px 18px', background: '#1a1a1a', color: '#faf6f0',
-                  fontSize: 10, letterSpacing: 2, textTransform: 'uppercase',
-                  textDecoration: 'none', width: 'fit-content' }}>
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 18px',
+                  background: '#1a1a1a', color: '#faf6f0', fontSize: 10, letterSpacing: 2,
+                  textTransform: 'uppercase', textDecoration: 'none', width: 'fit-content' }}>
                 ↗ WEBSITE
               </a>
             )}
             {fund.linkedin && (
               <a href={fund.linkedin} target="_blank" rel="noopener noreferrer"
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 8,
-                  padding: '10px 18px', border: '1px solid #1a1a1a', color: '#1a1a1a',
-                  fontSize: 10, letterSpacing: 2, textTransform: 'uppercase',
-                  textDecoration: 'none', width: 'fit-content' }}>
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 18px',
+                  border: '1px solid #1a1a1a', color: '#1a1a1a', fontSize: 10, letterSpacing: 2,
+                  textTransform: 'uppercase', textDecoration: 'none', width: 'fit-content' }}>
                 LinkedIn
               </a>
             )}
             {fund.email && (
               <a href={`mailto:${fund.email}`}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 8,
-                  padding: '10px 18px', border: '1px solid #ccc', color: '#555',
-                  fontSize: 10, letterSpacing: 2, textTransform: 'uppercase',
-                  textDecoration: 'none', width: 'fit-content' }}>
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 18px',
+                  border: '1px solid #ccc', color: '#555', fontSize: 10, letterSpacing: 2,
+                  textTransform: 'uppercase', textDecoration: 'none', width: 'fit-content' }}>
                 ✉ {fund.email}
               </a>
             )}
@@ -300,13 +303,12 @@ function DetailPanel({ fund, onClose }) {
 function DirectoryTab({ funds, loading, error, search, setSearch,
   citySel, setCitySel, typeSel, setTypeSel, stageSel, setStageSel,
   sectorSel, setSectorSel, sizeSel, setSizeSel,
-  cities, stages, sectors, selected, setSelected, onClearAll, hasActiveFilters }) {
+  cities, sectors, selected, setSelected, onClearAll, hasActiveFilters }) {
 
   return (
     <div>
       <div style={{ padding: '12px 48px', borderBottom: '1px solid #d4cfc7',
         display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', background: '#f0ebe3' }}>
-        {/* Search */}
         <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
           <input value={search} onChange={e => setSearch(e.target.value)}
             placeholder="Search funds, thesis, sectors…"
@@ -318,27 +320,22 @@ function DirectoryTab({ funds, loading, error, search, setSearch,
             <button onClick={() => setSearch('')}
               style={{ position: 'absolute', right: 8, background: 'none', border: 'none',
                 cursor: 'pointer', fontSize: 17, lineHeight: 1, color: '#999', padding: 0,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                width: 18, height: 18 }}>
+                outline: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               ×
             </button>
           )}
         </div>
-
-        <MultiSelect label="City" options={cities} selected={citySel} onChange={setCitySel} />
-        <MultiSelect label="Type" options={Object.keys(TYPE_COLORS)} selected={typeSel} onChange={setTypeSel} />
-        <MultiSelect label="Stage" options={['Pre-Seed', 'Seed', 'Series A', 'Multi-Stage']} selected={stageSel} onChange={setStageSel} />
-        <MultiSelect label="Size" options={SIZE_BUCKETS} selected={sizeSel} onChange={setSizeSel} />
-        <MultiSelect label="Sector" options={sectors} selected={sectorSel} onChange={setSectorSel} />
-
+        <MultiSelect label="City"   options={cities}                              selected={citySel}   onChange={setCitySel} />
+        <MultiSelect label="Type"   options={Object.keys(TYPE_COLORS)}            selected={typeSel}   onChange={setTypeSel} />
+        <MultiSelect label="Stage"  options={['Pre-Seed','Seed','Series A','Multi-Stage']} selected={stageSel} onChange={setStageSel} />
+        <MultiSelect label="Size"   options={SIZE_BUCKETS}                        selected={sizeSel}   onChange={setSizeSel} />
+        <MultiSelect label="Sector" options={sectors}                             selected={sectorSel} onChange={setSectorSel} />
         {hasActiveFilters && (
           <button onClick={onClearAll} style={{
             background: 'none', border: '1px solid #c8302a', color: '#c8302a',
             padding: '7px 14px', fontSize: 10, letterSpacing: 2, textTransform: 'uppercase',
-            fontFamily: '"DM Mono", monospace', cursor: 'pointer',
-          }}>
-            CLEAR ALL
-          </button>
+            fontFamily: '"DM Mono", monospace', cursor: 'pointer', outline: 'none',
+          }}>CLEAR ALL</button>
         )}
         <span style={{ marginLeft: 'auto', fontSize: 11, opacity: 0.4 }}>
           {!loading && `${funds.length} results`}
@@ -369,9 +366,9 @@ function DirectoryTab({ funds, loading, error, search, setSearch,
 
 // ─── Network tab ──────────────────────────────────────────────────────────────
 function NetworkTab({ funds, mapPaths }) {
-  const [hovered, setHovered] = useState(null);
+  const [hovered, setHovered]       = useState(null);
   const [selectedFund, setSelectedFund] = useState(null);
-  const [mapCity, setMapCity] = useState(null);
+  const [mapCity, setMapCity]       = useState(null);
   const [typeFilter, setTypeFilter] = useState([]);
 
   const cityClusters = {};
@@ -383,9 +380,10 @@ function NetworkTab({ funds, mapPaths }) {
   const mapFunds = mapCity ? (cityClusters[mapCity] || []) : [];
 
   return (
-    <div style={{ display: 'flex', height: 'calc(100vh - 110px)', overflow: 'hidden' }}>
-      <div style={{ flex: 1, padding: '16px 20px 12px', display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+    <div style={{ display: 'flex', height: 'calc(100vh - 74px)', overflow: 'hidden' }}>
+      {/* Map column */}
+      <div style={{ flex: 1, padding: '16px 20px 12px', display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden' }}>
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 10 }}>
           <span style={{ fontSize: 9, letterSpacing: 4, textTransform: 'uppercase', color: '#888' }}>
             CAPITAL NETWORK — UNITED STATES
           </span>
@@ -394,21 +392,27 @@ function NetworkTab({ funds, mapPaths }) {
           </div>
         </div>
 
-        <div style={{ flex: 1, minHeight: 0, border: '1px solid #ddd8d0', overflow: 'hidden' }}>
-          <svg viewBox="0 0 960 600"
-            style={{ width: '100%', height: '100%', display: 'block', background: '#f5f0e8' }}
-            preserveAspectRatio="xMidYMid meet">
-
-            {/* States */}
+        {/* Map container — position:relative so SVG can fill it absolutely */}
+        <div style={{ flex: 1, minHeight: 0, border: '1px solid #ddd8d0', position: 'relative', background: '#f5f0e8' }}>
+          <svg
+            viewBox="0 0 960 600"
+            preserveAspectRatio="xMidYMid meet"
+            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'block' }}
+          >
+            {/* State paths */}
             {mapPaths.length > 0
               ? mapPaths.map(({ id, d }) => (
                   <path key={id} d={d} fill="#e8e1d5" stroke="#c4bdb0" strokeWidth="0.6" strokeLinejoin="round" />
                 ))
-              : <text x="480" y="300" textAnchor="middle" fontSize="13"
-                  fill="#c4bdb0" fontFamily='"DM Mono",monospace' letterSpacing="2">LOADING MAP…</text>
+              : (
+                <text x="480" y="300" textAnchor="middle" fontSize="13"
+                  fill="#c4bdb0" fontFamily='"DM Mono",monospace' letterSpacing="2">
+                  LOADING MAP…
+                </text>
+              )
             }
 
-            {/* City dots */}
+            {/* City nodes */}
             {Object.entries(cityClusters).map(([city, cityFunds]) => {
               const coords = CITY_COORDS[city];
               if (!coords) return null;
@@ -423,14 +427,13 @@ function NetworkTab({ funds, mapPaths }) {
               const dotColor = TYPE_COLORS[topType] || '#888';
 
               return (
-                <g key={city} transform={`translate(${cx},${cy})`}
-                  style={{ cursor: 'pointer' }}
+                <g key={city} transform={`translate(${cx},${cy})`} style={{ cursor: 'pointer' }}
                   onClick={() => setMapCity(sel ? null : city)}
                   onMouseEnter={() => setHovered(city)}
                   onMouseLeave={() => setHovered(null)}>
-                  {sel && <circle r={r + 9} fill="none" stroke={dotColor} strokeWidth="1.2" opacity="0.3" />}
+                  {sel && <circle r={r + 9} fill="none" stroke={dotColor} strokeWidth="1.2" opacity="0.35" />}
                   <circle r={r} fill={dotColor}
-                    opacity={sel ? 1 : hov ? 0.9 : 0.75}
+                    opacity={sel ? 1 : hov ? 0.9 : 0.78}
                     stroke="#faf6f0" strokeWidth={sel ? 2.5 : 1.5}
                     style={{ transition: 'all 0.15s' }} />
                   <text textAnchor="middle" dy="0.35em"
@@ -438,9 +441,10 @@ function NetworkTab({ funds, mapPaths }) {
                     fontWeight="700" fill="#faf6f0" style={{ pointerEvents: 'none' }}>
                     {count}
                   </text>
-                  <text textAnchor="middle" dy={r + 14} fontSize="8.5"
-                    fontFamily='"DM Mono",monospace' letterSpacing="1"
-                    fill="#1a1a1a" opacity={sel || hov ? 0.9 : 0.5}
+                  {/* City label — black, bold */}
+                  <text textAnchor="middle" dy={r + 14} fontSize="9"
+                    fontFamily='"DM Mono",monospace' fontWeight="500" letterSpacing="1.5"
+                    fill="#1a1a1a" opacity={sel || hov ? 1 : 0.75}
                     style={{ pointerEvents: 'none' }}>
                     {city.toUpperCase()}
                   </text>
@@ -460,7 +464,7 @@ function NetworkTab({ funds, mapPaths }) {
         </div>
 
         {/* Legend */}
-        <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', marginTop: 10 }}>
+        <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', marginTop: 10, flexShrink: 0 }}>
           {Object.entries(TYPE_COLORS).map(([type, color]) => (
             <div key={type} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 10,
               opacity: typeFilter.length === 0 || typeFilter.includes(type) ? 0.75 : 0.2 }}>
@@ -486,7 +490,7 @@ function NetworkTab({ funds, mapPaths }) {
               </div>
               <button onClick={() => setMapCity(null)}
                 style={{ background: 'none', border: '1px solid #bbb', cursor: 'pointer',
-                  width: 26, height: 26, fontSize: 14, color: '#1a1a1a',
+                  width: 26, height: 26, fontSize: 14, color: '#1a1a1a', outline: 'none',
                   display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
             </div>
             <div style={{ flex: 1, overflowY: 'auto' }}>
@@ -528,16 +532,16 @@ function NetworkTab({ funds, mapPaths }) {
 
 // ─── Root ─────────────────────────────────────────────────────────────────────
 export default function App() {
-  const [funds, setFunds] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
-  const [tab, setTab] = useState('directory');
-  const [search, setSearch] = useState('');
-  const [citySel, setCitySel] = useState([]);
-  const [typeSel, setTypeSel] = useState([]);
+  const [funds, setFunds]       = useState([]);
+  const [loading, setLoading]   = useState(true);
+  const [error, setError]       = useState(false);
+  const [tab, setTab]           = useState('directory');
+  const [search, setSearch]     = useState('');
+  const [citySel, setCitySel]   = useState([]);
+  const [typeSel, setTypeSel]   = useState([]);
   const [stageSel, setStageSel] = useState([]);
   const [sectorSel, setSectorSel] = useState([]);
-  const [sizeSel, setSizeSel] = useState([]);
+  const [sizeSel, setSizeSel]   = useState([]);
   const [selected, setSelected] = useState(null);
   const [mapPaths, setMapPaths] = useState([]);
 
@@ -589,19 +593,16 @@ export default function App() {
   const cities  = [...new Set(funds.map(f => f.city).filter(Boolean))].sort();
   const sectors = [...new Set(funds.flatMap(f => f.industries.split(',').map(s => s.trim()).filter(Boolean)))].sort();
 
-  const hasActiveFilters = search || citySel.length || typeSel.length || stageSel.length || sectorSel.length || sizeSel.length;
-
-  const clearAll = () => {
-    setSearch(''); setCitySel([]); setTypeSel([]); setStageSel([]); setSectorSel([]); setSizeSel([]);
-  };
+  const hasActiveFilters = !!(search || citySel.length || typeSel.length || stageSel.length || sectorSel.length || sizeSel.length);
+  const clearAll = () => { setSearch(''); setCitySel([]); setTypeSel([]); setStageSel([]); setSectorSel([]); setSizeSel([]); };
 
   const filtered = funds.filter(f => {
     const bucket = fundSizeBucket(f.size);
     return (
-      (citySel.length === 0 || citySel.includes(f.city)) &&
-      (typeSel.length === 0 || typeSel.includes(f.type)) &&
-      (stageSel.length === 0 || stageSel.includes(f.stage)) &&
-      (sizeSel.length === 0 || sizeSel.includes(bucket)) &&
+      (citySel.length === 0   || citySel.includes(f.city)) &&
+      (typeSel.length === 0   || typeSel.includes(f.type)) &&
+      (stageSel.length === 0  || stageSel.includes(f.stage)) &&
+      (sizeSel.length === 0   || sizeSel.includes(bucket)) &&
       (sectorSel.length === 0 || sectorSel.some(s => f.industries.toLowerCase().includes(s.toLowerCase()))) &&
       (!search || [f.name, f.thesis, f.industries, f.city, f.gp1, f.gp2].join(' ').toLowerCase().includes(search.toLowerCase()))
     );
@@ -616,20 +617,18 @@ export default function App() {
         ::-webkit-scrollbar-track { background: #faf6f0; }
         ::-webkit-scrollbar-thumb { background: #1a1a1a; }
         input::placeholder { opacity: 0.38; }
+        button:focus { outline: none; }
         a { text-decoration: none; }
       `}</style>
 
-      {/* Header */}
       <header style={{ borderBottom: '2px solid #1a1a1a', background: '#faf6f0',
-        display: 'flex', alignItems: 'stretch', minHeight: 72 }}>
-
-        {/* Logo */}
+        display: 'flex', alignItems: 'stretch', height: 74 }}>
         <div onClick={() => { setTab('directory'); clearAll(); }}
           style={{ padding: '0 40px', display: 'flex', flexDirection: 'column',
             justifyContent: 'center', borderRight: '1px solid #1a1a1a',
             minWidth: 260, cursor: 'pointer', userSelect: 'none' }}>
           <div style={{ fontSize: 8, letterSpacing: 5, textTransform: 'uppercase',
-            color: '#c8302a', marginBottom: 5, fontWeight: 500, fontFamily: '"DM Mono", monospace' }}>
+            color: '#c8302a', marginBottom: 5, fontWeight: 500 }}>
             EMERGING CAPITAL ///
           </div>
           <h1 style={{ margin: 0, fontSize: 21, fontFamily: '"Raleway", sans-serif',
@@ -638,7 +637,6 @@ export default function App() {
           </h1>
         </div>
 
-        {/* Stats */}
         <div style={{ flex: 1, padding: '0 32px', display: 'flex', alignItems: 'center',
           gap: 32, borderRight: '1px solid #1a1a1a' }}>
           <div>
@@ -651,7 +649,7 @@ export default function App() {
             </div>
           </div>
           {!loading && !error && [
-            ['FUNDS', funds.length],
+            ['FUNDS',  funds.length],
             ['CITIES', [...new Set(funds.map(f => f.city))].filter(Boolean).length],
             ['STATES', [...new Set(funds.map(f => f.state))].filter(Boolean).length],
           ].map(([label, val]) => (
@@ -662,7 +660,6 @@ export default function App() {
           ))}
         </div>
 
-        {/* Nav */}
         <nav style={{ display: 'flex', alignItems: 'stretch' }}>
           {['directory', 'network'].map(t => (
             <button key={t} onClick={() => setTab(t)} style={{
@@ -672,6 +669,7 @@ export default function App() {
               border: 'none', borderLeft: '1px solid #1a1a1a',
               cursor: 'pointer', fontSize: 10, letterSpacing: 3, textTransform: 'uppercase',
               fontFamily: '"DM Mono", monospace', transition: 'all 0.12s', fontWeight: 500,
+              outline: 'none',
             }}>{t}</button>
           ))}
         </nav>
