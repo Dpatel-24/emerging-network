@@ -786,14 +786,14 @@ function MapTab({ funds, mapPaths }) {
   return (
     <div style={{display:'flex',height:'calc(100vh - 74px)',overflow:'hidden'}}>
       {/* Map column */}
-      <div style={{flex:1,padding:'16px 20px 12px',display:'flex',flexDirection:'column',minWidth:0,overflow:'hidden'}}>
-        <div style={{fontSize:9,letterSpacing:4,textTransform:'uppercase',color:'#888',marginBottom:10,flexShrink:0}}>
+      <div style={{flex:1,padding:'16px 20px 12px',minWidth:0,overflow:'hidden'}}>
+        <div style={{fontSize:9,letterSpacing:4,textTransform:'uppercase',color:'#888',marginBottom:10}}>
           EMERGING CAPITAL REGIONS — UNITED STATES
         </div>
 
-        {/* SVG container — flex:1 minHeight:0 with SVG width/height 100% is the reliable pattern */}
+        {/* SVG gets explicit calc height — bypasses all flex-chain zero-height bugs */}
         <div style={{
-          flex:1, minHeight:0,
+          height:'calc(100vh - 74px - 115px)',
           border:'1px solid #ddd8d0',
           overflow:'hidden',
           background:'#f5f0e8',
