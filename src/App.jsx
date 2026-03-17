@@ -1020,7 +1020,7 @@ export default function App() {
   },[]);
 
   useEffect(()=>{
-    fetch('https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json')
+    fetch('https://cdn.jsdelivr.net/npm/us-atlas@3/states-albers-10m.json')
       .then(r=>r.json()).then(t=>setMapPaths(decodeTopojson(t))).catch(console.error);
   },[]);
 
