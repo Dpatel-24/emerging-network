@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { Analytics } from '@vercel/analytics/react';
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 const BASE = import.meta.env.VITE_AIRTABLE_BASE;
@@ -403,7 +404,7 @@ function PartnerPanel({ partner, onClose }) {
   );
 }
 
-// ─── Fund card ────────────────────────────────────────────────────────────────
+// ─── Fund card ──────────────────────────────────────────────────────────��─────
 function FundCard({ fund, onClick }) {
   const [hov,setHov] = useState(false);
   const color = TYPE_COLORS[fund.type]||'#888';
@@ -1176,6 +1177,7 @@ export default function App() {
           </div>
         </div>
       </footer>
+      <Analytics />
     </div>
   );
 }
