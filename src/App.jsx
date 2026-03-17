@@ -791,13 +791,12 @@ function MapTab({ funds, mapPaths }) {
           EMERGING CAPITAL REGIONS — UNITED STATES
         </div>
 
-        {/* SVG container — explicit height so the SVG always fills correctly */}
+        {/* SVG container — flex:1 minHeight:0 with SVG width/height 100% is the reliable pattern */}
         <div style={{
-          height:'calc(100vh - 74px - 120px)',
+          flex:1, minHeight:0,
           border:'1px solid #ddd8d0',
           overflow:'hidden',
           background:'#f5f0e8',
-          flexShrink:0,
         }}>
           <svg viewBox="0 0 960 600" preserveAspectRatio="xMidYMid meet"
             style={{width:'100%',height:'100%',display:'block'}}>
