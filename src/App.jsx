@@ -40,15 +40,18 @@ const FIPS_REGION = {
 };
 
 // Approximate label centroids in Albers 960×600 space
+// To adjust node positions: increase X to move right, decrease X to move left
+// To adjust node positions: increase Y to move down, decrease Y to move up
+// ViewBox is 960 wide × 600 tall
 const REGION_LABEL = {
-  'West':       [120, 320],
-  'North West': [260, 200],
-  'South West': [380, 380],
-  'Mid-West':   [560, 300],
-  'South East': [720, 420],
-  'Mid-Atlantic':[800, 280],
-  'North East': [850, 160],
-  'Gulf South': [520, 460],
+  'West':       [90, 290],      // Adjust [X, Y] as needed
+  'North West': [180, 180],
+  'South West': [340, 365],
+  'Mid-West':   [560, 350],
+  'South East': [775, 400],
+  'Mid-Atlantic':[825, 180],
+  'North East': [890, 150],
+  'Gulf South': [600, 440],
 };
 
 const TYPE_COLORS = {
@@ -435,7 +438,6 @@ function FundCard({ fund, onClick }) {
 // ─── Investor card ────────────────────────────────────────────────────────────
 function InvestorCard({ inv, onClick }) {
   const [hov,setHov] = useState(false);
-  const color = TYPE_COLORS[inv.fund]||'#888';
   return (
     <div onClick={()=>onClick(inv)} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
       style={{padding:'20px 22px',cursor:'pointer',background:hov?'#1a1a1a':'#faf6f0',
@@ -451,7 +453,7 @@ function InvestorCard({ inv, onClick }) {
         </div>
       </div>
       <div style={{fontSize:10,letterSpacing:1.5,textTransform:'uppercase',
-        color:hov?'#aaa':color,fontWeight:500,marginBottom:8}}>{inv.fund}</div>
+        color:hov?'#aaa':'#c8302a',fontWeight:500,marginBottom:8}}>{inv.fund}</div>
       {inv.thesis && (
         <div style={{fontSize:11,lineHeight:1.6,opacity:0.6,
           display:'-webkit-box',WebkitLineClamp:3,WebkitBoxOrient:'vertical',overflow:'hidden'}}>
