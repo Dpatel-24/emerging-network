@@ -17,14 +17,14 @@ const TABLES = {
 const REGIONS = ['West','North West','South West','Mid-West','South East','Mid-Atlantic','North East','Gulf South'];
 
 const REGION_COLORS = {
-  'West':       '#808080',
+  'West':       '#64748b',
   'North West': '#22c55e',
   'South West': '#f97316',
   'Mid-West':   '#eab308',
-  'South East': '#ef4444',
+  'South East': '#f59e0b',
   'Mid-Atlantic':'#06b6d4',
   'North East': '#7c3aed',
-  'Gulf South': '#f59e0b',
+  'Gulf South': '#ef4444',
 };
 
 // FIPS state code → Region
@@ -32,7 +32,7 @@ const FIPS_REGION = {
   '06':'West','32':'West',
   '53':'North West','41':'North West','30':'North West','16':'North West','56':'North West',
   '04':'South West','35':'South West','49':'South West','08':'South West','40':'South West','48':'South West',
-  '38':'Mid-West','46':'Mid-West','31':'Mid-West','20':'Mid-West','27':'Mid-West','19':'Mid-West','55':'Mid-West','29':'Mid-West',
+  '38':'Mid-West','46':'Mid-West','31':'Mid-West','20':'Mid-West','27':'Mid-West','19':'Mid-West','55':'Mid-West','29':'Mid-West','26':'Mid-West','17':'Mid-West','18':'Mid-West','39':'Mid-West',
   '12':'South East','13':'South East','45':'South East','37':'South East','51':'South East','54':'South East','21':'South East','47':'South East',
   '24':'Mid-Atlantic','10':'Mid-Atlantic','42':'Mid-Atlantic','34':'Mid-Atlantic','36':'Mid-Atlantic',
   '50':'North East','33':'North East','23':'North East','25':'North East','44':'North East','09':'North East',
@@ -41,14 +41,14 @@ const FIPS_REGION = {
 
 // Approximate label centroids in Albers 960×600 space
 const REGION_LABEL = {
-  'West':       [180, 350],
-  'North West': [280, 220],
-  'South West': [400, 400],
-  'Mid-West':   [620, 280],
-  'South East': [750, 430],
-  'Mid-Atlantic':[820, 260],
-  'North East': [870, 180],
-  'Gulf South': [580, 480],
+  'West':       [120, 320],
+  'North West': [260, 200],
+  'South West': [380, 380],
+  'Mid-West':   [560, 300],
+  'South East': [720, 420],
+  'Mid-Atlantic':[800, 280],
+  'North East': [850, 160],
+  'Gulf South': [520, 460],
 };
 
 const TYPE_COLORS = {
@@ -435,6 +435,7 @@ function FundCard({ fund, onClick }) {
 // ─── Investor card ────────────────────────────────────────────────────────────
 function InvestorCard({ inv, onClick }) {
   const [hov,setHov] = useState(false);
+  const color = TYPE_COLORS[inv.fund]||'#888';
   return (
     <div onClick={()=>onClick(inv)} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
       style={{padding:'20px 22px',cursor:'pointer',background:hov?'#1a1a1a':'#faf6f0',
@@ -450,7 +451,7 @@ function InvestorCard({ inv, onClick }) {
         </div>
       </div>
       <div style={{fontSize:10,letterSpacing:1.5,textTransform:'uppercase',
-        color:hov?'#aaa':'#c8302a',fontWeight:500,marginBottom:8}}>{inv.fund}</div>
+        color:hov?'#aaa':color,fontWeight:500,marginBottom:8}}>{inv.fund}</div>
       {inv.thesis && (
         <div style={{fontSize:11,lineHeight:1.6,opacity:0.6,
           display:'-webkit-box',WebkitLineClamp:3,WebkitBoxOrient:'vertical',overflow:'hidden'}}>
@@ -814,7 +815,7 @@ function MapTab({ funds, mapPaths }) {
               return (
                 <path key={region} d={d}
                   fill={color}
-                  opacity={isActive?0.9:isHov?0.55:0.22}
+                  opacity={isActive?0.9:isHov?0.55:0.15}
                   stroke={isActive||isHov?color:'#c8c2b8'}
                   strokeWidth={isActive?1.2:0.5}
                   strokeLinejoin="round"
@@ -1075,7 +1076,7 @@ export default function App() {
           {!loading && stats.map(([l,v])=>(
             <div key={l}>
               <div style={{fontSize:10,letterSpacing:2,color:'#1a1a1a',marginBottom:3,fontWeight:600}}>{l}</div>
-              <div style={{fontSize:20,fontFamily:'"Raleway",sans-serif',fontWeight:800,lineHeight:1}}>{v}</div>
+              <div style={{fontSize:20,fontFamily:'"Raleway",sans-serif',fontWeight:800,lineHeight:1,letterSpacing:-0.5}}>{v}</div>
             </div>
           ))}
         </div>
