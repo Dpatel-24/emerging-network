@@ -45,10 +45,10 @@ const FIPS_REGION = {
 // ViewBox is 960 wide × 600 tall
 const REGION_LABEL = {
   'West':       [90, 270],      // Adjust [X, Y] as needed
-  'North West': [180, 150],
+  'North West': [180, 130],
   'South West': [340, 375],
-  'Mid-West':   [560, 190],
-  'South East': [775, 400],
+  'Mid-West':   [560, 200],
+  'South East': [775, 375],
   'Mid-Atlantic':[825, 190],
   'North East': [890, 135],
   'Gulf South': [600, 450],
