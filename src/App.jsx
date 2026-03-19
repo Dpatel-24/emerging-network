@@ -44,14 +44,14 @@ const FIPS_REGION = {
 // To adjust node positions: increase Y to move down, decrease Y to move up
 // ViewBox is 960 wide × 600 tall
 const REGION_LABEL = {
-  'West':       [90, 290],      // Adjust [X, Y] as needed
-  'North West': [180, 180],
-  'South West': [340, 365],
-  'Mid-West':   [560, 350],
+  'West':       [90, 270],      // Adjust [X, Y] as needed
+  'North West': [180, 150],
+  'South West': [340, 375],
+  'Mid-West':   [560, 190],
   'South East': [775, 400],
-  'Mid-Atlantic':[825, 180],
-  'North East': [890, 150],
-  'Gulf South': [600, 440],
+  'Mid-Atlantic':[825, 190],
+  'North East': [890, 135],
+  'Gulf South': [600, 450],
 };
 
 const TYPE_COLORS = {
