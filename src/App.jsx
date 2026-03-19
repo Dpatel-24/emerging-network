@@ -14,41 +14,41 @@ const TABLES = {
 };
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-const REGIONS = ['Gulf South','Southeast','Texas','Mountain West','Midwest','Mid-Atlantic','Northeast','Southwest'];
+const REGIONS = ['West','North West','South West','Mid-West','South East','Mid-Atlantic','North East','Gulf South'];
 
 const REGION_COLORS = {
-  'Gulf South':    '#c8302a',
-  'Southeast':     '#1d4ed8',
-  'Texas':         '#15803d',
-  'Mountain West': '#b45309',
-  'Midwest':       '#7c3aed',
-  'Mid-Atlantic':  '#0e7490',
-  'Northeast':     '#be185d',
-  'Southwest':     '#d97706',
+  'West':       '#808080',
+  'North West': '#22c55e',
+  'South West': '#f97316',
+  'Mid-West':   '#eab308',
+  'South East': '#ef4444',
+  'Mid-Atlantic':'#06b6d4',
+  'North East': '#7c3aed',
+  'Gulf South': '#f59e0b',
 };
 
 // FIPS state code → Region
 const FIPS_REGION = {
-  '22':'Gulf South','28':'Gulf South','01':'Gulf South','05':'Gulf South',
-  '47':'Southeast','13':'Southeast','12':'Southeast','37':'Southeast','45':'Southeast',
-  '48':'Texas','40':'Texas',
-  '49':'Mountain West','08':'Mountain West','32':'Mountain West','16':'Mountain West','56':'Mountain West','30':'Mountain West',
-  '17':'Midwest','39':'Midwest','18':'Midwest','26':'Midwest','27':'Midwest','55':'Midwest','29':'Midwest','20':'Midwest',
-  '36':'Mid-Atlantic','34':'Mid-Atlantic','42':'Mid-Atlantic','11':'Mid-Atlantic','24':'Mid-Atlantic','51':'Mid-Atlantic',
-  '25':'Northeast','09':'Northeast','44':'Northeast','50':'Northeast','33':'Northeast','23':'Northeast',
-  '04':'Southwest','35':'Southwest',
+  '06':'West','32':'West',
+  '53':'North West','41':'North West','30':'North West','16':'North West','56':'North West',
+  '04':'South West','35':'South West','49':'South West','08':'South West','40':'South West','48':'South West',
+  '38':'Mid-West','46':'Mid-West','31':'Mid-West','20':'Mid-West','27':'Mid-West','19':'Mid-West','55':'Mid-West','29':'Mid-West',
+  '12':'South East','13':'South East','45':'South East','37':'South East','51':'South East','54':'South East','21':'South East','47':'South East',
+  '24':'Mid-Atlantic','10':'Mid-Atlantic','42':'Mid-Atlantic','34':'Mid-Atlantic','36':'Mid-Atlantic',
+  '50':'North East','33':'North East','23':'North East','25':'North East','44':'North East','09':'North East',
+  '05':'Gulf South','22':'Gulf South','28':'Gulf South','01':'Gulf South',
 };
 
 // Approximate label centroids in Albers 960×600 space
 const REGION_LABEL = {
-  'Gulf South':    [700, 455],
-  'Southeast':     [780, 398],
-  'Texas':         [510, 458],
-  'Mountain West': [268, 312],
-  'Midwest':       [610, 295],
-  'Mid-Atlantic':  [822, 270],
-  'Northeast':     [872, 192],
-  'Southwest':     [372, 435],
+  'West':       [180, 350],
+  'North West': [280, 220],
+  'South West': [400, 400],
+  'Mid-West':   [620, 280],
+  'South East': [750, 430],
+  'Mid-Atlantic':[820, 260],
+  'North East': [870, 180],
+  'Gulf South': [580, 480],
 };
 
 const TYPE_COLORS = {
@@ -1053,8 +1053,8 @@ export default function App() {
         <div onClick={()=>setTab('capital')}
           style={{padding:'0 40px',display:'flex',flexDirection:'column',justifyContent:'center',
             borderRight:'1px solid #1a1a1a',minWidth:260,cursor:'pointer',userSelect:'none'}}>
-          <div style={{fontSize:10,letterSpacing:4,textTransform:'uppercase',color:'#c8302a',marginBottom:5,fontWeight:600}}>
-            EMERGING CAPITAL ///
+          <div style={{fontSize:13,letterSpacing:4,textTransform:'uppercase',color:'#c8302a',marginBottom:5,fontWeight:600}}>
+            EMERGING NETWORKS ///
           </div>
           <h1 style={{margin:0,fontSize:22,fontFamily:'"Raleway",sans-serif',fontWeight:800,letterSpacing:-0.5,lineHeight:1}}>
             US Capital Directory
@@ -1064,7 +1064,7 @@ export default function App() {
         {/* Stats ticker */}
         <div style={{flex:1,padding:'0 32px',display:'flex',alignItems:'center',gap:32,borderRight:'1px solid #1a1a1a'}}>
           <div>
-            <div style={{fontSize:8.5,letterSpacing:2,color:'#999',marginBottom:3}}>STATUS</div>
+            <div style={{fontSize:10,letterSpacing:2,color:'#1a1a1a',marginBottom:3,fontWeight:600}}>STATUS</div>
             <div style={{fontSize:11,display:'flex',alignItems:'center',gap:7}}>
               <span style={{width:7,height:7,borderRadius:'50%',flexShrink:0,
                 background:loading?'#f59e0b':'#22c55e',
@@ -1074,7 +1074,7 @@ export default function App() {
           </div>
           {!loading && stats.map(([l,v])=>(
             <div key={l}>
-              <div style={{fontSize:8.5,letterSpacing:2,color:'#999',marginBottom:3}}>{l}</div>
+              <div style={{fontSize:10,letterSpacing:2,color:'#1a1a1a',marginBottom:3,fontWeight:600}}>{l}</div>
               <div style={{fontSize:20,fontFamily:'"Raleway",sans-serif',fontWeight:800,lineHeight:1}}>{v}</div>
             </div>
           ))}
@@ -1109,7 +1109,7 @@ export default function App() {
           {/* Mission */}
           <div>
             <div style={{fontSize:8,letterSpacing:5,textTransform:'uppercase',color:'#c8302a',marginBottom:12,fontWeight:600}}>
-              EMERGING CAPITAL ///
+              EMERGING NETWORKS ///
             </div>
             <h2 style={{fontFamily:'"Raleway",sans-serif',fontSize:22,fontWeight:800,
               margin:'0 0 16px',lineHeight:1.15,letterSpacing:-0.5}}>
@@ -1169,7 +1169,7 @@ export default function App() {
         {/* Bottom bar */}
         <div style={{padding:'16px 64px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
           <div style={{fontSize:10,opacity:0.3}}>
-            © {new Date().getFullYear()} Emerging Capital. Curated, not scraped.
+            © {new Date().getFullYear()} Emerging Networks. Curated, not scraped.
           </div>
           <div style={{fontSize:10,opacity:0.3,letterSpacing:1}}>
             emerging.network
