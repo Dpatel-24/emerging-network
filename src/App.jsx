@@ -44,7 +44,7 @@ const FIPS_REGION = {
 // To adjust node positions: increase Y to move down, decrease Y to move up
 // ViewBox is 960 wide × 600 tall
 const REGION_LABEL = {
-  'West':       [90, 270],      // Adjust [X, Y] as needed
+  'West':       [90, 270],
   'North West': [180, 130],
   'South West': [340, 375],
   'Mid-West':   [560, 200],
@@ -436,8 +436,12 @@ function FundCard({ fund, onClick }) {
 }
 
 // ─── Investor card ────────────────────────────────────────────────────────────
-function InvestorCard({ inv, onClick }) {
+function InvestorCard({ inv, funds=[], onClick }) {
   const [hov,setHov] = useState(false);
+  // Find the fund in the funds array to get its type
+  const fundData = funds.find(f => f.name && inv.fund && f.name.toLowerCase().trim() === inv.fund.toLowerCase().trim());
+  const fundType = fundData?.type || 'Venture Fund'; // fallback to default type
+  const color = TYPE_COLORS[fundType] || '#888';
   return (
     <div onClick={()=>onClick(inv)} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
       style={{padding:'20px 22px',cursor:'pointer',background:hov?'#1a1a1a':'#faf6f0',
@@ -453,7 +457,7 @@ function InvestorCard({ inv, onClick }) {
         </div>
       </div>
       <div style={{fontSize:10,letterSpacing:1.5,textTransform:'uppercase',
-        color:hov?'#aaa':'#c8302a',fontWeight:500,marginBottom:8}}>{inv.fund}</div>
+        color:hov?'#aaa':color,fontWeight:500,marginBottom:8}}>{inv.fund}</div>
       {inv.thesis && (
         <div style={{fontSize:11,lineHeight:1.6,opacity:0.6,
           display:'-webkit-box',WebkitLineClamp:3,WebkitBoxOrient:'vertical',overflow:'hidden'}}>
@@ -602,7 +606,7 @@ function CapitalTab({ funds, investors, loading }) {
           ? <CardGrid items={filteredFunds} loading={loading}
               renderCard={f=><FundCard fund={f} onClick={setSelected} />} />
           : <CardGrid items={filteredInv} loading={loading}
-              renderCard={inv=><InvestorCard inv={inv} onClick={setSelected} />}
+              renderCard={inv=><InvestorCard inv={inv} funds={funds} onClick={setSelected} />}
               emptyMsg="NO INVESTORS" />
         }
       </div>
