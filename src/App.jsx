@@ -207,7 +207,6 @@ function SlidePanel({ onClose, children }) {
 
 // ─── Fund detail panel ────────────────────────────────────────────────────────
 function FundPanel({ fund, onClose, investors=[], onSelectInvestor }) {
-  const [view, setView] = useState('info');
   const color = TYPE_COLORS[fund.type]||'#888';
   const bucket = fundSizeBucket(fund.size);
   const gps = [
@@ -224,94 +223,72 @@ function FundPanel({ fund, onClose, investors=[], onSelectInvestor }) {
         <span style={{fontSize:10,letterSpacing:2.5,textTransform:'uppercase',color,fontWeight:500}}>{fund.type}</span>
         <button onClick={onClose} style={{background:'none',border:'none',cursor:'pointer',fontSize:22,lineHeight:1,color:'#1a1a1a',padding:0,outline:'none'}}>×</button>
       </div>
-      
-      {/* Tabs */}
-      <div style={{borderBottom:'1px solid #d4cfc7',background:'#faf6f0',display:'flex',paddingLeft:28}}>
-        {['info','investors'].map(v=>(
-          <button key={v} onClick={()=>setView(v)} style={{
-            padding:'10px 16px',background:'none',border:'none',
-            borderBottom:`2px solid ${view===v?'#1a1a1a':'transparent'}`,
-            cursor:'pointer',fontSize:9,letterSpacing:2,textTransform:'uppercase',
-            fontFamily:'"DM Mono",monospace',color:view===v?'#1a1a1a':'#888',outline:'none',
-          }}>{v==='info'?'ABOUT FUND':'INVESTORS ON FILE'}</button>
-        ))}
-      </div>
-      
       <div style={{padding:'26px 28px',overflowY:'auto',flex:1}}>
-        {view==='info' ? (
-          <>
-            <div style={{fontSize:9,letterSpacing:3,textTransform:'uppercase',color:REGION_COLORS[fund.region]||'#999',marginBottom:4,fontWeight:500}}>{fund.region}</div>
-            <h2 style={{fontFamily:'"Raleway",sans-serif',fontSize:22,fontWeight:800,margin:'0 0 4px',lineHeight:1.2}}>{fund.name}</h2>
-            <div style={{fontSize:12,color:'#888',marginBottom:22}}>{fund.city}{fund.state?`, ${fund.state}`:''}</div>
-            {fund.thesis && (
-              <div style={{marginBottom:20}}>
-                <div style={{fontSize:9,letterSpacing:3,textTransform:'uppercase',color:'#999',marginBottom:8}}>THESIS</div>
-                <p style={{fontSize:13.5,lineHeight:1.75,margin:0}}>{fund.thesis}</p>
+        <div style={{fontSize:9,letterSpacing:3,textTransform:'uppercase',color:REGION_COLORS[fund.region]||'#999',marginBottom:4,fontWeight:500}}>{fund.region}</div>
+        <h2 style={{fontFamily:'"Raleway",sans-serif',fontSize:22,fontWeight:800,margin:'0 0 4px',lineHeight:1.2}}>{fund.name}</h2>
+        <div style={{fontSize:12,color:'#888',marginBottom:22}}>{fund.city}{fund.state?`, ${fund.state}`:''}</div>
+        {fund.thesis && (
+          <div style={{marginBottom:20}}>
+            <div style={{fontSize:9,letterSpacing:3,textTransform:'uppercase',color:'#999',marginBottom:8}}>THESIS</div>
+            <p style={{fontSize:13.5,lineHeight:1.75,margin:0}}>{fund.thesis}</p>
+          </div>
+        )}
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'14px 20px',marginBottom:20}}>
+          {[['Stage',fund.stage],['Fund Size',fund.size?`${fund.size} · ${bucket}`:''],['Vintage',fund.vintage?`Est. ${fund.vintage}`:'']].filter(([,v])=>v).map(([l,v])=>(
+            <div key={l}>
+              <div style={{fontSize:9,letterSpacing:3,textTransform:'uppercase',color:'#999',marginBottom:4}}>{l}</div>
+              <div style={{fontSize:13.5}}>{v}</div>
+            </div>
+          ))}
+        </div>
+        {gps.length>0 && (
+          <div style={{marginBottom:20}}>
+            <div style={{fontSize:9,letterSpacing:3,textTransform:'uppercase',color:'#999',marginBottom:10}}>GENERAL PARTNER{gps.length>1?'S':''}</div>
+            {gps.map((gp,i)=>(
+              <div key={i} style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:8}}>
+                <span style={{fontSize:13.5}}>{gp.name}</span>
+                {gp.li && <a href={gp.li} target="_blank" rel="noopener noreferrer" style={{fontSize:10,letterSpacing:1.5,textTransform:'uppercase',color,borderBottom:`1px solid ${color}`,textDecoration:'none',paddingBottom:1}}>LinkedIn</a>}
               </div>
-            )}
-            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'14px 20px',marginBottom:20}}>
-              {[['Stage',fund.stage],['Fund Size',fund.size?`${fund.size} · ${bucket}`:''],['Vintage',fund.vintage?`Est. ${fund.vintage}`:'']].filter(([,v])=>v).map(([l,v])=>(
-                <div key={l}>
-                  <div style={{fontSize:9,letterSpacing:3,textTransform:'uppercase',color:'#999',marginBottom:4}}>{l}</div>
-                  <div style={{fontSize:13.5}}>{v}</div>
+            ))}
+          </div>
+        )}
+        {linkedInvestors.length>0 && (
+          <div style={{marginBottom:20}}>
+            <div style={{fontSize:9,letterSpacing:3,textTransform:'uppercase',color:'#999',marginBottom:10}}>INVESTORS ON FILE</div>
+            {linkedInvestors.map(inv=>(
+              <div key={inv.id} onClick={()=>onSelectInvestor&&onSelectInvestor(inv)}
+                style={{display:'flex',alignItems:'center',gap:12,padding:'10px 12px',
+                  marginBottom:6,border:'1px solid #e8e3db',cursor:'pointer',background:'#faf6f0'}}
+                onMouseEnter={e=>e.currentTarget.style.background='#f0ebe3'}
+                onMouseLeave={e=>e.currentTarget.style.background='#faf6f0'}>
+                <div style={{width:32,height:32,borderRadius:'50%',background:'#1a1a1a',display:'flex',
+                  alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                  <span style={{color:'#faf6f0',fontFamily:'"Raleway",sans-serif',fontWeight:800,fontSize:13}}>{(inv.name||'?')[0]}</span>
                 </div>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontSize:13,fontWeight:600,fontFamily:'"Raleway",sans-serif'}}>{inv.name}</div>
+                  <div style={{fontSize:10,opacity:0.5}}>{inv.title}</div>
+                </div>
+                <span style={{fontSize:10,opacity:0.35}}>→</span>
+              </div>
+            ))}
+          </div>
+        )}
+        {fund.industries && (
+          <div style={{marginBottom:20}}>
+            <div style={{fontSize:9,letterSpacing:3,textTransform:'uppercase',color:'#999',marginBottom:8}}>SECTORS</div>
+            <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
+              {fund.industries.split(',').map(i=>i.trim()).filter(Boolean).map(i=>(
+                <span key={i} style={{border:`1px solid ${color}`,color,fontSize:10,padding:'3px 9px'}}>{i}</span>
               ))}
             </div>
-            {gps.length>0 && (
-              <div style={{marginBottom:20}}>
-                <div style={{fontSize:9,letterSpacing:3,textTransform:'uppercase',color:'#999',marginBottom:10}}>GENERAL PARTNER{gps.length>1?'S':''}</div>
-                {gps.map((gp,i)=>(
-                  <div key={i} style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:8}}>
-                    <span style={{fontSize:13.5}}>{gp.name}</span>
-                    {gp.li && <a href={gp.li} target="_blank" rel="noopener noreferrer" style={{fontSize:10,letterSpacing:1.5,textTransform:'uppercase',color,borderBottom:`1px solid ${color}`,textDecoration:'none',paddingBottom:1}}>LinkedIn</a>}
-                  </div>
-                ))}
-              </div>
-            )}
-            {fund.industries && (
-              <div style={{marginBottom:20}}>
-                <div style={{fontSize:9,letterSpacing:3,textTransform:'uppercase',color:'#999',marginBottom:8}}>SECTORS</div>
-                <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
-                  {fund.industries.split(',').map(i=>i.trim()).filter(Boolean).map(i=>(
-                    <span key={i} style={{border:`1px solid ${color}`,color,fontSize:10,padding:'3px 9px'}}>{i}</span>
-                  ))}
-                </div>
-              </div>
-            )}
-            <div style={{display:'flex',flexDirection:'column',gap:8,marginTop:20}}>
-              {fund.website && <a href={fund.website} target="_blank" rel="noopener noreferrer" style={{display:'inline-flex',alignItems:'center',gap:8,padding:'10px 18px',background:'#1a1a1a',color:'#faf6f0',fontSize:10,letterSpacing:2,textTransform:'uppercase',textDecoration:'none',width:'fit-content'}}>↗ WEBSITE</a>}
-              {fund.linkedin && <a href={fund.linkedin} target="_blank" rel="noopener noreferrer" style={{display:'inline-flex',alignItems:'center',gap:8,padding:'10px 18px',border:'1px solid #1a1a1a',color:'#1a1a1a',fontSize:10,letterSpacing:2,textTransform:'uppercase',textDecoration:'none',width:'fit-content'}}>LinkedIn</a>}
-              {fund.email && <a href={`mailto:${fund.email}`} style={{display:'inline-flex',alignItems:'center',gap:8,padding:'10px 18px',border:'1px solid #ccc',color:'#555',fontSize:10,letterSpacing:2,textTransform:'uppercase',textDecoration:'none',width:'fit-content'}}>✉ {fund.email}</a>}
-            </div>
-          </>
-        ) : (
-          <>
-            {linkedInvestors.length===0 ? (
-              <div style={{padding:'40px 0',textAlign:'center',fontSize:11,opacity:0.35,letterSpacing:2}}>NO INVESTORS ON FILE</div>
-            ) : (
-              <>
-                <div style={{fontSize:9,letterSpacing:3,textTransform:'uppercase',color:'#999',marginBottom:12}}>TEAM ON FILE ({linkedInvestors.length})</div>
-                {linkedInvestors.map(inv=>(
-                  <div key={inv.id} onClick={()=>onSelectInvestor&&onSelectInvestor(inv)}
-                    style={{display:'flex',alignItems:'center',gap:12,padding:'12px',
-                      marginBottom:8,border:'1px solid #e8e3db',cursor:'pointer',background:'#faf6f0'}}
-                    onMouseEnter={e=>e.currentTarget.style.background='#f0ebe3'}
-                    onMouseLeave={e=>e.currentTarget.style.background='#faf6f0'}>
-                    <div style={{width:36,height:36,borderRadius:'50%',background:'#1a1a1a',display:'flex',
-                      alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                      <span style={{color:'#faf6f0',fontFamily:'"Raleway",sans-serif',fontWeight:800,fontSize:14}}>{(inv.name||'?')[0]}</span>
-                    </div>
-                    <div style={{flex:1,minWidth:0}}>
-                      <div style={{fontSize:13,fontWeight:600,fontFamily:'"Raleway",sans-serif'}}>{inv.name}</div>
-                      <div style={{fontSize:10,opacity:0.5}}>{inv.title}</div>
-                    </div>
-                    <span style={{fontSize:10,opacity:0.35,flexShrink:0}}>→</span>
-                  </div>
-                ))}
-              </>
-            )}
-          </>
+          </div>
         )}
+        <div style={{display:'flex',flexDirection:'column',gap:8,marginTop:20}}>
+          {fund.website && <a href={fund.website} target="_blank" rel="noopener noreferrer" style={{display:'inline-flex',alignItems:'center',gap:8,padding:'10px 18px',background:'#1a1a1a',color:'#faf6f0',fontSize:10,letterSpacing:2,textTransform:'uppercase',textDecoration:'none',width:'fit-content'}}>↗ WEBSITE</a>}
+          {fund.linkedin && <a href={fund.linkedin} target="_blank" rel="noopener noreferrer" style={{display:'inline-flex',alignItems:'center',gap:8,padding:'10px 18px',border:'1px solid #1a1a1a',color:'#1a1a1a',fontSize:10,letterSpacing:2,textTransform:'uppercase',textDecoration:'none',width:'fit-content'}}>LinkedIn</a>}
+          {fund.email && <a href={`mailto:${fund.email}`} style={{display:'inline-flex',alignItems:'center',gap:8,padding:'10px 18px',border:'1px solid #ccc',color:'#555',fontSize:10,letterSpacing:2,textTransform:'uppercase',textDecoration:'none',width:'fit-content'}}>✉ {fund.email}</a>}
+        </div>
       </div>
     </SlidePanel>
   );
