@@ -663,19 +663,22 @@ function PartnersTab({ partners, loading }) {
 // ─── PULSE TAB ────────────────────────────────────────────────────────────────
 function PulseTab({ events, dispatches, loading }) {
   const [regionSel,setReg]       = useState([]);
+  const [search,setSearch]       = useState('');
   const [expandedId,setExpanded] = useState(null);
   const today = new Date();
   today.setHours(0,0,0,0);
 
   const filteredEvents = events
-    .filter(e => regionSel.length===0 || regionSel.includes(e.region))
+    .filter(e => (regionSel.length===0 || regionSel.includes(e.region)) &&
+                 (!search || [e.name,e.city,e.description].join(' ').toLowerCase().includes(search.toLowerCase())))
     .sort((a,b) => new Date(a.date)-new Date(b.date));
 
   const upcoming = filteredEvents.filter(e => e.date && new Date(e.date)>=today);
   const past     = filteredEvents.filter(e => e.date && new Date(e.date)<today);
 
   const filteredDisp = dispatches
-    .filter(d => regionSel.length===0 || regionSel.includes(d.region))
+    .filter(d => (regionSel.length===0 || regionSel.includes(d.region)) &&
+                 (!search || [d.title,d.body].join(' ').toLowerCase().includes(search.toLowerCase())))
     .sort((a,b) => new Date(b.date)-new Date(a.date));
 
   const ensureHttp = s => s?(s.startsWith('http')?s:`https://${s}`):'';
@@ -684,9 +687,19 @@ function PulseTab({ events, dispatches, loading }) {
     <div style={{display:'flex',height:'calc(100vh - 74px)',overflow:'hidden'}}>
       {/* Left: Events */}
       <div style={{width:380,flexShrink:0,borderRight:'1px solid #d4cfc7',display:'flex',flexDirection:'column'}}>
-        <div style={{padding:'14px 24px',borderBottom:'1px solid #d4cfc7',background:'#f0ebe3',
+        <div style={{padding:'12px 20px',borderBottom:'1px solid #d4cfc7',background:'#faf6f0'}}>
+          <input
+            type="text"
+            placeholder="Search events…"
+            value={search}
+            onChange={e=>setSearch(e.target.value)}
+            style={{width:'100%',padding:'8px 12px',fontSize:11,fontFamily:'"DM Mono",monospace',
+              border:'1px solid #d4cfc7',background:'#fff',color:'#1a1a1a',outline:'none'}}
+          />
+        </div>
+        <div style={{padding:'10px 20px',borderBottom:'1px solid #d4cfc7',background:'#f0ebe3',
           display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-          <span style={{fontSize:9,letterSpacing:4,textTransform:'uppercase',color:'#888'}}>EVENTS</span>
+          <span style={{fontSize:9,letterSpacing:4,textTransform:'uppercase',color:'#888'}}>FILTER</span>
           <MultiSelect label="Region" options={REGIONS} selected={regionSel} onChange={setReg} />
         </div>
         <div style={{flex:1,overflowY:'auto'}}>
