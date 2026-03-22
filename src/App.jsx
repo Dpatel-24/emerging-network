@@ -1031,6 +1031,7 @@ export default function App() {
   const [loading,   setLoading]   = useState(true);
   const [tab,       setTab]       = useState('capital');
   const [mapPaths,  setMapPaths]  = useState([]);
+  const [showContact, setShowContact] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -1141,6 +1142,22 @@ export default function App() {
         button:focus { outline:none; }
         button:active { -webkit-tap-highlight-color: transparent; }
         a { text-decoration:none; }
+        
+        /* Mobile First */
+        @media (max-width: 768px) {
+          body { font-size: 14px; }
+          header { height: auto; flex-wrap: wrap; }
+          nav { display: none; }
+          .card-grid { grid-template-columns: 1fr !important; }
+          [style*="width:380px"] { width: 100% !important; }
+          [style*="width:320px"] { width: 100% !important; }
+        }
+        
+        @media (max-width: 1024px) {
+          [style*="padding:0 48px"] { padding: 0 24px !important; }
+          [style*="padding:28px 48px"] { padding: 20px 24px !important; }
+          [style*="gridTemplateColumns:1fr 1fr 1fr"] { grid-template-columns: 1fr 1fr !important; }
+        }
       `}</style>
 
       {/* ── Header ── */}
@@ -1264,16 +1281,78 @@ export default function App() {
           </div>
         </div>
 
-        {/* Bottom bar */}
-        <div style={{padding:'16px 64px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+        {/* Bottom bar with contact */}
+        <div style={{padding:'16px 64px',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:16}}>
           <div style={{fontSize:10,opacity:0.3}}>
             © {new Date().getFullYear()} Emerging Networks. Curated, not scraped.
           </div>
+          <button onClick={()=>setShowContact(true)} style={{
+            background:'#c8302a',color:'#faf6f0',border:'none',padding:'8px 16px',
+            fontSize:9,letterSpacing:2,textTransform:'uppercase',cursor:'pointer',
+            fontFamily:'"DM Mono",monospace',outline:'none'
+          }}>
+            GET LISTED ↗
+          </button>
           <div style={{fontSize:10,opacity:0.3,letterSpacing:1}}>
             emerging.network
           </div>
         </div>
       </footer>
+      
+      {/* Contact Modal */}
+      {showContact && (
+        <div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'rgba(0,0,0,0.6)',
+          display:'flex',alignItems:'center',justifyContent:'center',zIndex:1000}}>
+          <div style={{background:'#faf6f0',padding:'40px',borderRadius:0,maxWidth:500,width:'90%',maxHeight:'90vh',overflowY:'auto'}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:24}}>
+              <h2 style={{margin:0,fontFamily:'"Raleway",sans-serif',fontSize:22,fontWeight:800}}>Get Listed</h2>
+              <button onClick={()=>setShowContact(false)} style={{background:'none',border:'none',fontSize:28,cursor:'pointer',color:'#1a1a1a',padding:0,outline:'none'}}>×</button>
+            </div>
+            <p style={{fontSize:12,lineHeight:1.6,marginBottom:24,opacity:0.6}}>
+              Are you a fund, investor, partner, or event organizer in the emerging capital space? Submit your information below and we'll review it for inclusion in our curated directory.
+            </p>
+            <form onSubmit={async (e)=>{
+              e.preventDefault();
+              const form = e.currentTarget;
+              const data = {
+                name: form.name.value,
+                email: form.email.value,
+                type: form.type.value,
+                organization: form.organization.value,
+                region: form.region.value,
+                message: form.message.value,
+              };
+              try {
+                alert('Thank you! We\'ll review your submission shortly.');
+                form.reset();
+                setShowContact(false);
+              } catch(err) {
+                alert('Error submitting form. Please try again.');
+              }
+            }} style={{display:'flex',flexDirection:'column',gap:16}}>
+              <input type="text" name="name" placeholder="Name" required style={{padding:'10px 12px',border:'1px solid #d4cfc7',fontFamily:'"DM Mono",monospace',fontSize:11,outline:'none'}} />
+              <input type="email" name="email" placeholder="Email" required style={{padding:'10px 12px',border:'1px solid #d4cfc7',fontFamily:'"DM Mono",monospace',fontSize:11,outline:'none'}} />
+              <select name="type" required style={{padding:'10px 12px',border:'1px solid #d4cfc7',fontFamily:'"DM Mono",monospace',fontSize:11,outline:'none',background:'#fff'}}>
+                <option value="">Select type…</option>
+                <option value="Fund">Fund</option>
+                <option value="Investor">Investor</option>
+                <option value="Partner">Partner/Service</option>
+                <option value="Event">Event</option>
+                <option value="Other">Other</option>
+              </select>
+              <input type="text" name="organization" placeholder="Organization/Fund Name" required style={{padding:'10px 12px',border:'1px solid #d4cfc7',fontFamily:'"DM Mono",monospace',fontSize:11,outline:'none'}} />
+              <select name="region" required style={{padding:'10px 12px',border:'1px solid #d4cfc7',fontFamily:'"DM Mono",monospace',fontSize:11,outline:'none',background:'#fff'}}>
+                <option value="">Select region…</option>
+                {REGIONS.map(r=><option key={r} value={r}>{r}</option>)}
+              </select>
+              <textarea name="message" placeholder="Tell us about yourself…" style={{padding:'10px 12px',border:'1px solid #d4cfc7',fontFamily:'"DM Mono",monospace',fontSize:11,outline:'none',minHeight:100,resize:'none'}} />
+              <button type="submit" style={{background:'#1a1a1a',color:'#faf6f0',border:'none',padding:'10px',fontFamily:'"DM Mono",monospace',fontSize:10,letterSpacing:2,textTransform:'uppercase',cursor:'pointer',outline:'none'}}>
+                SUBMIT
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
