@@ -662,6 +662,7 @@ function PartnersTab({ partners, loading }) {
 
 // ─── PULSE TAB ────────────────────────────────────────────────────────────────
 function PulseTab({ events, dispatches, loading }) {
+  const [view, setView] = useState('events');
   const [regionSel,setReg]       = useState([]);
   const [search,setSearch]       = useState('');
   const [expandedId,setExpanded] = useState(null);
@@ -684,106 +685,181 @@ function PulseTab({ events, dispatches, loading }) {
   const ensureHttp = s => s?(s.startsWith('http')?s:`https://${s}`):'';
 
   return (
-    <div style={{display:'flex',height:'calc(100vh - 74px)',overflow:'hidden'}}>
-      {/* Left: Events */}
-      <div style={{width:380,flexShrink:0,borderRight:'1px solid #d4cfc7',display:'flex',flexDirection:'column'}}>
-        <div style={{padding:'12px 20px',borderBottom:'1px solid #d4cfc7',background:'#faf6f0'}}>
-          <input
-            type="text"
-            placeholder="Search events…"
-            value={search}
-            onChange={e=>setSearch(e.target.value)}
-            style={{width:'100%',padding:'8px 12px',fontSize:11,fontFamily:'"DM Mono",monospace',
-              border:'1px solid #d4cfc7',background:'#fff',color:'#1a1a1a',outline:'none'}}
-          />
-        </div>
-        <div style={{padding:'10px 20px',borderBottom:'1px solid #d4cfc7',background:'#f0ebe3',
-          display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-          <span style={{fontSize:9,letterSpacing:4,textTransform:'uppercase',color:'#888'}}>FILTER</span>
-          <MultiSelect label="Region" options={REGIONS} selected={regionSel} onChange={setReg} />
-        </div>
-        <div style={{flex:1,overflowY:'auto'}}>
-          {loading ? (
-            <div style={{padding:40,textAlign:'center',fontSize:11,opacity:0.35,letterSpacing:2}}>LOADING…</div>
-          ) : upcoming.length===0 ? (
-            <div style={{padding:40,textAlign:'center',fontSize:11,opacity:0.35,letterSpacing:2}}>NO UPCOMING EVENTS</div>
-          ) : upcoming.map(e => {
-            const d = new Date(e.date);
-            return (
-              <div key={e.id} style={{padding:'16px 24px',borderBottom:'1px solid #e8e3db'}}>
-                <div style={{display:'flex',alignItems:'flex-start',gap:14}}>
-                  <div style={{flexShrink:0,width:44,background:'#1a1a1a',color:'#faf6f0',padding:'6px 0',textAlign:'center'}}>
-                    <div style={{fontSize:18,fontFamily:'"Raleway",sans-serif',fontWeight:800,lineHeight:1}}>{d.getUTCDate()}</div>
-                    <div style={{fontSize:8,letterSpacing:2,opacity:0.6}}>
-                      {d.toLocaleString('en',{month:'short',timeZone:'UTC'}).toUpperCase()}
-                    </div>
-                  </div>
-                  <div style={{flex:1,minWidth:0}}>
-                    <div style={{fontSize:9,letterSpacing:2,textTransform:'uppercase',
-                      color:REGION_COLORS[e.region]||'#888',marginBottom:3,fontWeight:500}}>{e.region}</div>
-                    <div style={{fontFamily:'"Raleway",sans-serif',fontSize:14,fontWeight:700,marginBottom:3,lineHeight:1.3}}>{e.name}</div>
-                    <div style={{fontSize:11,opacity:0.45,marginBottom:8}}>{e.city}</div>
-                    {e.description && <div style={{fontSize:11,lineHeight:1.6,opacity:0.6,marginBottom:8}}>{e.description}</div>}
-                    {e.regUrl && (
-                      <a href={ensureHttp(e.regUrl)} target="_blank" rel="noopener noreferrer"
-                        style={{fontSize:10,letterSpacing:2,textTransform:'uppercase',color:'#c8302a',
-                          textDecoration:'none',borderBottom:'1px solid #c8302a',paddingBottom:1}}>
-                        REGISTER ↗
-                      </a>
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+    <div style={{display:'flex',flexDirection:'column',height:'calc(100vh - 74px)',overflow:'hidden'}}>
+      {/* Tabs */}
+      <div style={{borderBottom:'1px solid #d4cfc7',background:'#faf6f0',display:'flex',paddingLeft:48}}>
+        {['events','dispatches'].map(v=>(
+          <button key={v} onClick={()=>{setView(v);setSearch('');setReg([]);}} style={{
+            padding:'10px 24px',background:'none',border:'none',
+            borderBottom:`2px solid ${view===v?'#1a1a1a':'transparent'}`,
+            cursor:'pointer',fontSize:10,letterSpacing:3,textTransform:'uppercase',
+            fontFamily:'"DM Mono",monospace',color:view===v?'#1a1a1a':'#888',outline:'none',
+          }}>{v}</button>
+        ))}
       </div>
 
-      {/* Right: Dispatches */}
-      <div style={{flex:1,display:'flex',flexDirection:'column',minWidth:0}}>
-        <div style={{padding:'14px 32px',borderBottom:'1px solid #d4cfc7',background:'#f0ebe3'}}>
-          <span style={{fontSize:9,letterSpacing:4,textTransform:'uppercase',color:'#888'}}>DISPATCHES</span>
-        </div>
-        <div style={{flex:1,overflowY:'auto'}}>
-          {loading ? (
-            <div style={{padding:40,textAlign:'center',fontSize:11,opacity:0.35,letterSpacing:2}}>LOADING…</div>
-          ) : filteredDisp.length===0 ? (
-            <div style={{padding:40,textAlign:'center',fontSize:11,opacity:0.35,letterSpacing:2}}>NO DISPATCHES</div>
-          ) : filteredDisp.map(d => {
-            const isExp = expandedId===d.id;
-            return (
-              <div key={d.id} style={{borderBottom:'1px solid #e8e3db',padding:'24px 32px'}}>
-                <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:8}}>
-                  <span style={{fontSize:9,letterSpacing:2,textTransform:'uppercase',
-                    color:REGION_COLORS[d.region]||'#888',fontWeight:500}}>{d.region}</span>
-                  {d.date && <span style={{fontSize:9,opacity:0.35}}>
-                    {new Date(d.date).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric',timeZone:'UTC'})}
-                  </span>}
-                </div>
-                <h3 onClick={()=>setExpanded(isExp?null:d.id)}
-                  style={{fontFamily:'"Raleway",sans-serif',fontSize:20,fontWeight:800,
-                    margin:'0 0 12px',lineHeight:1.2,cursor:'pointer'}}>
-                  {d.title}
-                </h3>
-                {d.body && (
-                  <div style={{fontSize:13.5,lineHeight:1.8,color:'#333',
-                    display:isExp?'block':'-webkit-box',
-                    WebkitLineClamp:isExp?undefined:4,
-                    WebkitBoxOrient:isExp?undefined:'vertical',
-                    overflow:isExp?'visible':'hidden'}}>
-                    {d.body}
+      {view==='events' ? (
+        <div style={{display:'flex',flex:1,overflow:'hidden'}}>
+          {/* Left: Upcoming Events */}
+          <div style={{width:380,flexShrink:0,borderRight:'1px solid #d4cfc7',display:'flex',flexDirection:'column'}}>
+            <div style={{padding:'12px 20px',borderBottom:'1px solid #d4cfc7',background:'#faf6f0'}}>
+              <input
+                type="text"
+                placeholder="Search events…"
+                value={search}
+                onChange={e=>setSearch(e.target.value)}
+                style={{width:'100%',padding:'8px 12px',fontSize:11,fontFamily:'"DM Mono",monospace',
+                  border:'1px solid #d4cfc7',background:'#fff',color:'#1a1a1a',outline:'none'}}
+              />
+            </div>
+            <div style={{padding:'10px 20px',borderBottom:'1px solid #d4cfc7',background:'#f0ebe3',
+              display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+              <span style={{fontSize:9,letterSpacing:4,textTransform:'uppercase',color:'#888'}}>FILTER</span>
+              <MultiSelect label="Region" options={REGIONS} selected={regionSel} onChange={setReg} />
+            </div>
+            <div style={{flex:1,overflowY:'auto'}}>
+              <div style={{padding:'14px 20px',fontSize:9,letterSpacing:3,textTransform:'uppercase',color:'#999',marginBottom:12}}>UPCOMING EVENTS</div>
+              {loading ? (
+                <div style={{padding:40,textAlign:'center',fontSize:11,opacity:0.35,letterSpacing:2}}>LOADING…</div>
+              ) : upcoming.length===0 ? (
+                <div style={{padding:40,textAlign:'center',fontSize:11,opacity:0.35,letterSpacing:2}}>NO UPCOMING EVENTS</div>
+              ) : upcoming.map(e => {
+                const d = new Date(e.date);
+                return (
+                  <div key={e.id} style={{padding:'16px 24px',borderBottom:'1px solid #e8e3db'}}>
+                    <div style={{display:'flex',alignItems:'flex-start',gap:14}}>
+                      <div style={{flexShrink:0,width:44,background:'#1a1a1a',color:'#faf6f0',padding:'6px 0',textAlign:'center'}}>
+                        <div style={{fontSize:18,fontFamily:'"Raleway",sans-serif',fontWeight:800,lineHeight:1}}>{d.getUTCDate()}</div>
+                        <div style={{fontSize:8,letterSpacing:2,opacity:0.6}}>
+                          {d.toLocaleString('en',{month:'short',timeZone:'UTC'}).toUpperCase()}
+                        </div>
+                      </div>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontSize:9,letterSpacing:2,textTransform:'uppercase',
+                          color:REGION_COLORS[e.region]||'#888',marginBottom:3,fontWeight:500}}>{e.region}</div>
+                        <div style={{fontFamily:'"Raleway",sans-serif',fontSize:14,fontWeight:700,marginBottom:3,lineHeight:1.3}}>{e.name}</div>
+                        <div style={{fontSize:11,opacity:0.45,marginBottom:8}}>{e.city}</div>
+                        {e.description && <div style={{fontSize:11,lineHeight:1.6,opacity:0.6,marginBottom:8}}>{e.description}</div>}
+                        {e.regUrl && (
+                          <a href={ensureHttp(e.regUrl)} target="_blank" rel="noopener noreferrer"
+                            style={{fontSize:10,letterSpacing:2,textTransform:'uppercase',color:'#c8302a',
+                              textDecoration:'none',borderBottom:'1px solid #c8302a',paddingBottom:1}}>
+                            REGISTER ↗
+                          </a>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                )}
-                <button onClick={()=>setExpanded(isExp?null:d.id)}
-                  style={{marginTop:12,background:'none',border:'none',padding:0,cursor:'pointer',
-                    fontSize:10,letterSpacing:2,textTransform:'uppercase',color:'#888',outline:'none'}}>
-                  {isExp?'COLLAPSE ↑':'READ MORE →'}
-                </button>
-              </div>
-            );
-          })}
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Right: Events Grid */}
+          <div style={{flex:1,display:'flex',flexDirection:'column',minWidth:0}}>
+            <div style={{padding:'14px 32px',borderBottom:'1px solid #d4cfc7',background:'#f0ebe3'}}>
+              <span style={{fontSize:9,letterSpacing:4,textTransform:'uppercase',color:'#888'}}>EVENTS DIRECTORY</span>
+            </div>
+            <div style={{flex:1,overflowY:'auto',padding:'28px 48px'}}>
+              {loading ? (
+                <div style={{padding:40,textAlign:'center',fontSize:11,opacity:0.35,letterSpacing:2}}>LOADING…</div>
+              ) : filteredEvents.length===0 ? (
+                <div style={{padding:40,textAlign:'center',fontSize:11,opacity:0.35,letterSpacing:2}}>NO EVENTS</div>
+              ) : (
+                <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))',gap:24}}>
+                  {filteredEvents.map(e => {
+                    const d = new Date(e.date);
+                    return (
+                      <div key={e.id} style={{padding:'20px 22px',background:'#faf6f0',border:'1px solid #e8e3db'}}>
+                        <div style={{fontSize:9,letterSpacing:2,textTransform:'uppercase',
+                          color:REGION_COLORS[e.region]||'#888',marginBottom:8,fontWeight:500}}>{e.region}</div>
+                        <div style={{fontFamily:'"Raleway",sans-serif',fontSize:16,fontWeight:700,marginBottom:8,lineHeight:1.3}}>{e.name}</div>
+                        <div style={{fontSize:11,opacity:0.6,marginBottom:12}}>
+                          <div>{d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',timeZone:'UTC'})}</div>
+                          <div>{e.city}{e.state?`, ${e.state}`:''}</div>
+                        </div>
+                        {e.description && (
+                          <div style={{fontSize:11,lineHeight:1.6,opacity:0.55,marginBottom:12,
+                            display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden'}}>
+                            {e.description}
+                          </div>
+                        )}
+                        {e.regUrl && (
+                          <a href={ensureHttp(e.regUrl)} target="_blank" rel="noopener noreferrer"
+                            style={{display:'inline-flex',alignItems:'center',gap:8,padding:'8px 14px',
+                              background:'#1a1a1a',color:'#faf6f0',fontSize:9,letterSpacing:1.5,
+                              textTransform:'uppercase',textDecoration:'none',width:'fit-content'}}>
+                            REGISTER ↗
+                          </a>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
-      </div>
+      ) : (
+        <div style={{display:'flex',flex:1,overflow:'hidden'}}>
+          {/* Dispatches */}
+          <div style={{flex:1,display:'flex',flexDirection:'column',minWidth:0}}>
+            <div style={{padding:'12px 20px',borderBottom:'1px solid #d4cfc7',background:'#faf6f0'}}>
+              <input
+                type="text"
+                placeholder="Search dispatches…"
+                value={search}
+                onChange={e=>setSearch(e.target.value)}
+                style={{width:'100%',padding:'8px 12px',fontSize:11,fontFamily:'"DM Mono",monospace',
+                  border:'1px solid #d4cfc7',background:'#fff',color:'#1a1a1a',outline:'none'}}
+              />
+            </div>
+            <div style={{padding:'10px 20px',borderBottom:'1px solid #d4cfc7',background:'#f0ebe3',
+              display:'flex',alignItems:'center',justifyContent:'flex-end'}}>
+              <MultiSelect label="Region" options={REGIONS} selected={regionSel} onChange={setReg} />
+            </div>
+            <div style={{flex:1,overflowY:'auto',padding:'0 32px'}}>
+              {loading ? (
+                <div style={{padding:40,textAlign:'center',fontSize:11,opacity:0.35,letterSpacing:2}}>LOADING…</div>
+              ) : filteredDisp.length===0 ? (
+                <div style={{padding:40,textAlign:'center',fontSize:11,opacity:0.35,letterSpacing:2}}>NO DISPATCHES</div>
+              ) : filteredDisp.map(d => {
+                const isExp = expandedId===d.id;
+                return (
+                  <div key={d.id} style={{borderBottom:'1px solid #e8e3db',padding:'24px 0'}}>
+                    <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:8}}>
+                      <span style={{fontSize:9,letterSpacing:2,textTransform:'uppercase',
+                        color:REGION_COLORS[d.region]||'#888',fontWeight:500}}>{d.region}</span>
+                      {d.date && <span style={{fontSize:9,opacity:0.35}}>
+                        {new Date(d.date).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric',timeZone:'UTC'})}
+                      </span>}
+                    </div>
+                    <h3 onClick={()=>setExpanded(isExp?null:d.id)}
+                      style={{fontFamily:'"Raleway",sans-serif',fontSize:20,fontWeight:800,
+                        margin:'0 0 12px',lineHeight:1.2,cursor:'pointer'}}>
+                      {d.title}
+                    </h3>
+                    {d.body && (
+                      <div style={{fontSize:13.5,lineHeight:1.8,color:'#333',
+                        display:isExp?'block':'-webkit-box',
+                        WebkitLineClamp:isExp?undefined:4,
+                        WebkitBoxOrient:isExp?undefined:'vertical',
+                        overflow:isExp?'visible':'hidden'}}>
+                        {d.body}
+                      </div>
+                    )}
+                    <button onClick={()=>setExpanded(isExp?null:d.id)}
+                      style={{marginTop:12,background:'none',border:'none',padding:0,cursor:'pointer',
+                        fontSize:10,letterSpacing:2,textTransform:'uppercase',color:'#888',outline:'none'}}>
+                      {isExp?'COLLAPSE ↑':'READ MORE →'}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1097,7 +1173,7 @@ export default function App() {
           {!loading && stats.map(([l,v])=>(
             <div key={l}>
               <div style={{fontSize:10,letterSpacing:2,color:'#1a1a1a',marginBottom:3,fontWeight:600}}>{l}</div>
-              <div style={{fontSize:20,fontFamily:'"Raleway",sans-serif',fontWeight:800,lineHeight:1,letterSpacing:-0.5}}>{v}</div>
+              <div style={{fontSize:18,fontFamily:'"DM Mono",monospace',fontWeight:500,lineHeight:1,letterSpacing:-0.5,textAlign:'center'}}>{v}</div>
             </div>
           ))}
         </div>
@@ -1135,16 +1211,16 @@ export default function App() {
             </div>
             <h2 style={{fontFamily:'"Raleway",sans-serif',fontSize:22,fontWeight:800,
               margin:'0 0 16px',lineHeight:1.15,letterSpacing:-0.5}}>
-              The directory for capital outside the coasts.
+              The network for vetted, quality, niche capital.
             </h2>
             <p style={{fontSize:12,lineHeight:1.85,opacity:0.55,margin:0}}>
-              Emerging Capital is a curated intelligence layer for the startup ecosystems that don't make TechCrunch. We track the funds, investors, and ecosystem partners building the next generation of companies in the Gulf South, Southeast, Texas, Mountain West, and beyond.
+              Emerging Networks is a curated intelligence layer for startup ecosystems across the US. We track the funds, investors, and ecosystem partners building the next generation of companies in emerging markets: Gulf South, Southeast, South West, Mid-West, Mid-Atlantic, North East, and North West.
             </p>
           </div>
 
           {/* What we are */}
           <div>
-            <div style={{fontSize:9,letterSpacing:3,textTransform:'uppercase',color:'#888',marginBottom:16}}>WHAT WE ARE</div>
+            <div style={{fontSize:11,letterSpacing:3,textTransform:'uppercase',color:'#888',marginBottom:16}}>WHAT WE ARE</div>
             <div style={{display:'flex',flexDirection:'column',gap:14}}>
               {[
                 ['CAPITAL','A curated directory of venture funds, accelerators, family offices, and economic development organizations across emerging US markets.'],
@@ -1162,7 +1238,7 @@ export default function App() {
 
           {/* Quick links + stats */}
           <div>
-            <div style={{fontSize:9,letterSpacing:3,textTransform:'uppercase',color:'#888',marginBottom:16}}>NAVIGATE</div>
+            <div style={{fontSize:11,letterSpacing:3,textTransform:'uppercase',color:'#888',marginBottom:16}}>NAVIGATE</div>
             <div style={{display:'flex',flexDirection:'column',gap:8,marginBottom:32}}>
               {[['CAPITAL',()=>setTab('capital')],['PARTNERS',()=>setTab('partners')],['PULSE',()=>setTab('pulse')],['MAP',()=>setTab('map')]].map(([l,fn])=>(
                 <button key={l} onClick={fn} style={{background:'none',border:'none',padding:0,
