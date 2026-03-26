@@ -195,7 +195,7 @@ function SlidePanel({ onClose, children }) {
   return (
     <>
       <div onClick={onClose} style={{position:'fixed',inset:0,zIndex:99,background:'rgba(0,0,0,0.32)'}} />
-      <div style={{position:'fixed',top:0,right:0,width:440,height:'100vh',
+      <div className="en-slide-panel" style={{position:'fixed',top:0,right:0,width:440,height:'100vh',
         background:'#faf6f0',borderLeft:'2px solid #1a1a1a',zIndex:100,
         display:'flex',flexDirection:'column',fontFamily:'"DM Mono",monospace',
         boxShadow:'-8px 0 40px rgba(0,0,0,0.15)'}}>
@@ -497,7 +497,7 @@ function PartnerCard({ partner, onClick }) {
 // ─── Filter bar ───────────────────────────────────────────────────────────────
 function FilterBar({ search, setSearch, filters, hasFilters, onClearAll, resultCount, loading }) {
   return (
-    <div style={{padding:'12px 48px',borderBottom:'1px solid #d4cfc7',display:'flex',
+    <div className="en-filterbar" style={{padding:'12px 48px',borderBottom:'1px solid #d4cfc7',display:'flex',
       gap:8,alignItems:'center',flexWrap:'wrap',background:'#f0ebe3'}}>
       <div style={{position:'relative',display:'flex',alignItems:'center'}}>
         <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search…"
@@ -517,7 +517,7 @@ function FilterBar({ search, setSearch, filters, hasFilters, onClearAll, resultC
           CLEAR ALL
         </button>
       )}
-      <span style={{marginLeft:'auto',fontSize:11,opacity:0.4}}>
+      <span className="en-results-count" style={{marginLeft:'auto',fontSize:11,opacity:0.4}}>
         {!loading && `${resultCount} results`}
       </span>
     </div>
@@ -529,7 +529,7 @@ function CardGrid({ items, renderCard, loading, emptyMsg='NO RESULTS' }) {
   if (loading) return <div style={{textAlign:'center',padding:80,fontSize:11,letterSpacing:2,opacity:0.35}}>FETCHING LIVE DATA…</div>;
   if (!items.length) return <div style={{textAlign:'center',padding:80,fontSize:11,letterSpacing:2,opacity:0.35}}>{emptyMsg}</div>;
   return (
-    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))',
+    <div className="en-card-grid" style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))',
       border:'1px solid #1a1a1a',borderBottom:'none',borderRight:'none'}}>
       {items.map((item,i) => (
         <div key={item.id||i} style={{borderBottom:'1px solid #1a1a1a',borderRight:'1px solid #1a1a1a'}}>
@@ -577,7 +577,7 @@ function CapitalTab({ funds, investors, loading }) {
   return (
     <div>
       {/* Sub-nav */}
-      <div style={{borderBottom:'1px solid #d4cfc7',background:'#faf6f0',display:'flex',alignItems:'center',paddingLeft:48}}>
+      <div className="en-subnav" style={{borderBottom:'1px solid #d4cfc7',background:'#faf6f0',display:'flex',alignItems:'center',paddingLeft:48}}>
         {['funds','investors'].map(v=>(
           <button key={v} onClick={()=>{setView(v);setSelected(null);}} style={{
             padding:'10px 24px',background:'none',border:'none',
@@ -603,8 +603,7 @@ function CapitalTab({ funds, investors, loading }) {
         resultCount={resultCount} loading={loading}
       />
       {/* Grid */}
-      <div style={{padding:'28px 48px'}}>
-        {view==='funds'
+      <div className="en-tab-content" style={{padding:'28px 48px'}}>
           ? <CardGrid items={filteredFunds} loading={loading}
               renderCard={f=><FundCard fund={f} onClick={setSelected} />} />
           : <CardGrid items={filteredInv} loading={loading}
@@ -650,7 +649,7 @@ function PartnersTab({ partners, loading }) {
         hasFilters={hasFilters} onClearAll={clearAll}
         resultCount={filtered.length} loading={loading}
       />
-      <div style={{padding:'28px 48px'}}>
+      <div className="en-tab-content" style={{padding:'28px 48px'}}>
         <CardGrid items={filtered} loading={loading}
           renderCard={p=><PartnerCard partner={p} onClick={setSelected} />}
           emptyMsg="NO PARTNERS" />
@@ -685,9 +684,9 @@ function PulseTab({ events, dispatches, loading }) {
   const ensureHttp = s => s?(s.startsWith('http')?s:`https://${s}`):'';
 
   return (
-    <div style={{display:'flex',flexDirection:'column',height:'calc(100vh - 74px)',overflow:'hidden'}}>
+    <div className="en-pulse-wrap" style={{display:'flex',flexDirection:'column',height:'calc(100vh - 74px)',overflow:'hidden'}}>
       {/* Tabs */}
-      <div style={{borderBottom:'1px solid #d4cfc7',background:'#faf6f0',display:'flex',paddingLeft:48}}>
+      <div className="en-subnav" style={{borderBottom:'1px solid #d4cfc7',background:'#faf6f0',display:'flex',paddingLeft:48}}>
         {['events','dispatches'].map(v=>(
           <button key={v} onClick={()=>{setView(v);setSearch('');setReg([]);}} style={{
             padding:'10px 24px',background:'none',border:'none',
@@ -699,9 +698,9 @@ function PulseTab({ events, dispatches, loading }) {
       </div>
 
       {view==='events' ? (
-        <div style={{display:'flex',flex:1,overflow:'hidden'}}>
+        <div className="en-pulse-events" style={{display:'flex',flex:1,overflow:'hidden'}}>
           {/* Left: Upcoming Events */}
-          <div style={{width:380,flexShrink:0,borderRight:'1px solid #d4cfc7',display:'flex',flexDirection:'column'}}>
+          <div className="en-pulse-left" style={{width:380,flexShrink:0,borderRight:'1px solid #d4cfc7',display:'flex',flexDirection:'column'}}>
             <div style={{padding:'12px 20px',borderBottom:'1px solid #d4cfc7',background:'#faf6f0'}}>
               <input
                 type="text"
@@ -756,11 +755,11 @@ function PulseTab({ events, dispatches, loading }) {
           </div>
 
           {/* Right: Events Grid */}
-          <div style={{flex:1,display:'flex',flexDirection:'column',minWidth:0}}>
+          <div className="en-pulse-right" style={{flex:1,display:'flex',flexDirection:'column',minWidth:0}}>
             <div style={{padding:'14px 32px',borderBottom:'1px solid #d4cfc7',background:'#f0ebe3'}}>
               <span style={{fontSize:9,letterSpacing:4,textTransform:'uppercase',color:'#888'}}>EVENTS DIRECTORY</span>
             </div>
-            <div style={{flex:1,overflowY:'auto',padding:'28px 48px'}}>
+            <div className="en-pulse-right-inner" style={{flex:1,overflowY:'auto',padding:'28px 48px'}}>
               {loading ? (
                 <div style={{padding:40,textAlign:'center',fontSize:11,opacity:0.35,letterSpacing:2}}>LOADING…</div>
               ) : filteredEvents.length===0 ? (
@@ -882,15 +881,15 @@ function MapTab({ funds, mapPaths }) {
   });
 
   return (
-    <div style={{display:'flex',height:'calc(100vh - 74px)',overflow:'hidden'}}>
+    <div className="en-map-wrap" style={{display:'flex',height:'calc(100vh - 74px)',overflow:'hidden'}}>
       {/* Map column */}
-      <div style={{flex:1,padding:'16px 20px 12px',minWidth:0,overflow:'hidden'}}>
+      <div className="en-map-col" style={{flex:1,padding:'16px 20px 12px',minWidth:0,overflow:'hidden'}}>
         <div style={{fontSize:9,letterSpacing:4,textTransform:'uppercase',color:'#888',marginBottom:10}}>
           EMERGING CAPITAL REGIONS — UNITED STATES
         </div>
 
         {/* SVG gets explicit calc height — bypasses all flex-chain zero-height bugs */}
-        <div style={{
+        <div className="en-map-svg-wrap" style={{
           height:'calc(100vh - 74px - 115px)',
           border:'1px solid #ddd8d0',
           overflow:'hidden',
@@ -956,7 +955,7 @@ function MapTab({ funds, mapPaths }) {
         </div>
 
         {/* Legend */}
-        <div style={{display:'flex',gap:14,flexWrap:'wrap',marginTop:10,flexShrink:0}}>
+        <div className="en-map-legend" style={{display:'flex',gap:14,flexWrap:'wrap',marginTop:10,flexShrink:0}}>
           {REGIONS.map(r=>(
             <div key={r} onClick={()=>setActive(activeRegion===r?null:r)}
               style={{display:'flex',alignItems:'center',gap:5,fontSize:10,cursor:'pointer',
@@ -969,7 +968,7 @@ function MapTab({ funds, mapPaths }) {
       </div>
 
       {/* Side panel */}
-      <div style={{width:320,borderLeft:'2px solid #1a1a1a',display:'flex',
+      <div className="en-map-side" style={{width:320,borderLeft:'2px solid #1a1a1a',display:'flex',
         flexDirection:'column',background:'#f0ebe3',flexShrink:0}}>
         {activeRegion ? (
           <>
@@ -1032,6 +1031,7 @@ export default function App() {
   const [tab,       setTab]       = useState('capital');
   const [mapPaths,  setMapPaths]  = useState([]);
   const [showContact, setShowContact] = useState(false);
+  const [navOpen, setNavOpen] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -1143,32 +1143,88 @@ export default function App() {
         button:active { -webkit-tap-highlight-color: transparent; }
         a { text-decoration:none; }
         
-        /* Mobile First */
-        @media (max-width: 768px) {
-          body { font-size: 14px; }
-          header { height: auto; flex-wrap: wrap; }
-          nav { display: none; }
-          .card-grid { grid-template-columns: 1fr !important; }
-          [style*="width:380px"] { width: 100% !important; }
-          [style*="width:320px"] { width: 100% !important; }
-        }
-        
+        /* ── Tablet (641px – 1024px) ── */
         @media (max-width: 1024px) {
-          [style*="padding:0 48px"] { padding: 0 24px !important; }
-          [style*="padding:28px 48px"] { padding: 20px 24px !important; }
-          [style*="gridTemplateColumns:1fr 1fr 1fr"] { grid-template-columns: 1fr 1fr !important; }
+          .en-header-logo    { min-width: 200px !important; padding: 0 20px !important; }
+          .en-header-stats   { padding: 0 16px !important; gap: 18px !important; }
+          .en-header-nav button { padding: 0 16px !important; font-size: 9px !important; letter-spacing: 2px !important; }
+          .en-filterbar      { padding: 10px 20px !important; }
+          .en-tab-content    { padding: 20px 24px !important; }
+          .en-footer-grid    { padding: 32px 32px !important; gap: 28px !important; }
+          .en-footer-bottom  { padding: 14px 32px !important; }
+          .en-map-side       { width: 260px !important; }
+          .en-slide-panel    { width: 400px !important; }
+        }
+
+        /* ── Mobile (≤ 640px) ── */
+        @media (max-width: 640px) {
+          /* Header */
+          .en-header         { height: auto !important; flex-wrap: wrap !important; position: relative; }
+          .en-header-logo    { min-width: 0 !important; flex: 1 !important; padding: 12px 16px !important; border-right: none !important; }
+          .en-header-logo h1 { font-size: 17px !important; }
+          .en-header-logo .en-tagline { font-size: 10px !important; letter-spacing: 2px !important; }
+          .en-header-stats   { display: none !important; }
+          .en-header-nav     { display: none !important; }
+          .en-header-nav.open{ display: flex !important; flex-direction: column !important; width: 100% !important;
+                               order: 3; border-top: 1px solid #1a1a1a; }
+          .en-header-nav.open button { border-left: none !important; border-bottom: 1px solid #eee !important;
+                                       padding: 14px 20px !important; font-size: 11px !important;
+                                       justify-content: flex-start !important; height: auto !important; }
+          .en-hamburger      { display: flex !important; }
+
+          /* Slide panels — full width */
+          .en-slide-panel    { width: 100vw !important; }
+
+          /* Filter bar */
+          .en-filterbar      { padding: 10px 14px !important; gap: 6px !important; }
+          .en-filterbar input { min-width: 0 !important; flex: 1 !important; font-size: 11px !important; }
+          .en-results-count  { display: none !important; }
+
+          /* Card grid min-width */
+          .en-card-grid      { grid-template-columns: 1fr !important; }
+
+          /* Tab content padding */
+          .en-tab-content    { padding: 16px 14px !important; }
+
+          /* Sub-nav (funds/investors toggle) */
+          .en-subnav         { padding-left: 14px !important; }
+
+          /* Pulse tab outer container */
+          .en-pulse-wrap     { height: auto !important; overflow: visible !important; }
+
+          /* Pulse events: stack left + right panels */
+          .en-pulse-events   { flex-direction: column !important; overflow: visible !important; height: auto !important; }
+          .en-pulse-left     { width: 100% !important; max-height: 320px !important; border-right: none !important; border-bottom: 1px solid #d4cfc7 !important; flex-shrink: 0 !important; }
+          .en-pulse-right    { min-height: 300px !important; }
+          .en-pulse-right-inner { padding: 16px 14px !important; }
+
+          /* Map: stack map above fund list */
+          .en-map-wrap       { flex-direction: column !important; height: auto !important; overflow: visible !important; }
+          .en-map-col        { overflow: visible !important; padding: 12px 14px 8px !important; }
+          .en-map-svg-wrap   { height: 52vw !important; min-height: 200px !important; }
+          .en-map-side       { width: 100% !important; border-left: none !important; border-top: 2px solid #1a1a1a !important; max-height: 300px !important; }
+          .en-map-legend     { gap: 8px !important; flex-wrap: wrap !important; }
+          .en-map-legend > div { font-size: 9px !important; }
+
+          /* Footer */
+          .en-footer-grid    { grid-template-columns: 1fr !important; padding: 28px 20px !important; gap: 32px !important; }
+          .en-footer-bottom  { flex-direction: column !important; align-items: flex-start !important; gap: 10px !important; padding: 16px 20px !important; }
+          .en-footer-bottom div:last-child { display: none !important; }
+
+          /* Contact modal */
+          .en-modal-inner    { padding: 24px 20px !important; }
         }
       `}</style>
 
       {/* ── Header ── */}
-      <header style={{borderBottom:'2px solid #1a1a1a',background:'#faf6f0',
+      <header className="en-header" style={{borderBottom:'2px solid #1a1a1a',background:'#faf6f0',
         display:'flex',alignItems:'stretch',height:74}}>
 
         {/* Logo */}
-        <div onClick={()=>setTab('capital')}
+        <div className="en-header-logo" onClick={()=>{setTab('capital');setNavOpen(false);}}
           style={{padding:'0 40px',display:'flex',flexDirection:'column',justifyContent:'center',
             borderRight:'1px solid #1a1a1a',minWidth:260,cursor:'pointer',userSelect:'none'}}>
-          <div style={{fontSize:13,letterSpacing:4,textTransform:'uppercase',color:'#c8302a',marginBottom:5,fontWeight:600}}>
+          <div className="en-tagline" style={{fontSize:13,letterSpacing:4,textTransform:'uppercase',color:'#c8302a',marginBottom:5,fontWeight:600}}>
             EMERGING NETWORKS ///
           </div>
           <h1 style={{margin:0,fontSize:22,fontFamily:'"Raleway",sans-serif',fontWeight:800,letterSpacing:-0.5,lineHeight:1}}>
@@ -1176,8 +1232,16 @@ export default function App() {
           </h1>
         </div>
 
+        {/* Hamburger — hidden on desktop via CSS, visible on mobile */}
+        <button className="en-hamburger" onClick={()=>setNavOpen(o=>!o)}
+          style={{display:'none',alignItems:'center',justifyContent:'center',
+            padding:'0 18px',background:'none',border:'none',borderLeft:'1px solid #1a1a1a',
+            cursor:'pointer',fontSize:20,color:'#1a1a1a',outline:'none',flexShrink:0}}>
+          {navOpen ? '×' : '≡'}
+        </button>
+
         {/* Stats ticker */}
-        <div style={{flex:1,padding:'0 32px',display:'flex',alignItems:'center',gap:32,borderRight:'1px solid #1a1a1a'}}>
+        <div className="en-header-stats" style={{flex:1,padding:'0 32px',display:'flex',alignItems:'center',gap:32,borderRight:'1px solid #1a1a1a'}}>
           <div>
             <div style={{fontSize:10,letterSpacing:2,color:'#1a1a1a',marginBottom:3,fontWeight:600}}>STATUS</div>
             <div style={{fontSize:11,display:'flex',alignItems:'center',gap:7}}>
@@ -1196,9 +1260,9 @@ export default function App() {
         </div>
 
         {/* Nav tabs */}
-        <nav style={{display:'flex',alignItems:'stretch'}}>
+        <nav className={`en-header-nav${navOpen?' open':''}`} style={{display:'flex',alignItems:'stretch'}}>
           {[['capital','CAPITAL'],['partners','PARTNERS'],['pulse','PULSE'],['map','MAP']].map(([t,l])=>(
-            <button key={t} onClick={()=>setTab(t)} style={{
+            <button key={t} onClick={()=>{setTab(t);setNavOpen(false);}} style={{
               padding:'0 26px',
               background:tab===t?'#1a1a1a':'transparent',
               color:tab===t?'#faf6f0':'#1a1a1a',
@@ -1218,7 +1282,7 @@ export default function App() {
       {/* ── Footer ── */}
       <footer style={{borderTop:'2px solid #1a1a1a',background:'#1a1a1a',color:'#faf6f0',fontFamily:'"DM Mono",monospace'}}>
         {/* About strip */}
-        <div style={{borderBottom:'1px solid rgba(255,255,255,0.1)',padding:'48px 64px',
+        <div className="en-footer-grid" style={{borderBottom:'1px solid rgba(255,255,255,0.1)',padding:'48px 64px',
           display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:48}}>
 
           {/* Mission */}
@@ -1282,7 +1346,7 @@ export default function App() {
         </div>
 
         {/* Bottom bar with contact */}
-        <div style={{padding:'16px 64px',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:16}}>
+        <div className="en-footer-bottom" style={{padding:'16px 64px',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:16}}>
           <div style={{fontSize:10,opacity:0.3}}>
             © {new Date().getFullYear()} Emerging Networks. Curated, not scraped.
           </div>
@@ -1303,7 +1367,7 @@ export default function App() {
       {showContact && (
         <div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'rgba(0,0,0,0.6)',
           display:'flex',alignItems:'center',justifyContent:'center',zIndex:1000}}>
-          <div style={{background:'#faf6f0',padding:'40px',borderRadius:0,maxWidth:500,width:'90%',maxHeight:'90vh',overflowY:'auto'}}>
+          <div className="en-modal-inner" style={{background:'#faf6f0',padding:'40px',borderRadius:0,maxWidth:500,width:'90%',maxHeight:'90vh',overflowY:'auto'}}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:24}}>
               <h2 style={{margin:0,fontFamily:'"Raleway",sans-serif',fontSize:22,fontWeight:800}}>Get Listed</h2>
               <button onClick={()=>setShowContact(false)} style={{background:'none',border:'none',fontSize:28,cursor:'pointer',color:'#1a1a1a',padding:0,outline:'none'}}>×</button>
