@@ -604,6 +604,7 @@ function CapitalTab({ funds, investors, loading }) {
       />
       {/* Grid */}
       <div className="en-tab-content" style={{padding:'28px 48px'}}>
+        {view==='funds'
           ? <CardGrid items={filteredFunds} loading={loading}
               renderCard={f=><FundCard fund={f} onClick={setSelected} />} />
           : <CardGrid items={filteredInv} loading={loading}
