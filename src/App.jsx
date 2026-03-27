@@ -1,9 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 
 // ─── Config ───────────────────────────────────────────────────────────────────
-const BASE = import.meta.env.VITE_AIRTABLE_BASE;
-const KEY  = import.meta.env.VITE_AIRTABLE_TOKEN;
-const url  = t => `https://api.airtable.com/v0/${BASE}/${t}`;
 
 const TABLES = {
   funds:     'tblrzWPnDsJUJyrXd',
@@ -82,8 +79,10 @@ const SIZE_BUCKETS = ['Micro (<$10M)','Small ($10–50M)','Mid ($50–150M)','La
 async function fetchAll(tableId) {
   let all = [], offset = null;
   do {
-    const r = await fetch(url(tableId) + (offset ? `?offset=${offset}` : ''),
-      { headers: { Authorization: `Bearer ${KEY}` } });
+    const params = new URLSearchParams({ table: tableId });
+    if (offset) params.set('offset', offset);
+    const r = await fetch(`/api/airtable?${params}`);
+    if (!r.ok) throw new Error(`Proxy error ${r.status}`);
     const d = await r.json();
     all = all.concat(d.records || []);
     offset = d.offset || null;
@@ -1380,14 +1379,20 @@ export default function App() {
               e.preventDefault();
               const form = e.currentTarget;
               const data = {
-                name: form.name.value,
-                email: form.email.value,
-                type: form.type.value,
+                name:         form.name.value,
+                email:        form.email.value,
+                type:         form.type.value,
                 organization: form.organization.value,
-                region: form.region.value,
-                message: form.message.value,
+                region:       form.region.value,
+                message:      form.message.value,
               };
               try {
+                const res = await fetch('/api/contact', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(data),
+                });
+                if (!res.ok) throw new Error('Submit failed');
                 alert('Thank you! We\'ll review your submission shortly.');
                 form.reset();
                 setShowContact(false);
