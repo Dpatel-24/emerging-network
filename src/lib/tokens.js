@@ -71,8 +71,8 @@ export const partnerColors = {
 
 // ── Typography ──────────────────────────────────────────────────────────────
 export const font = {
-  mono:    '"DM Mono",monospace',
-  display: '"Raleway",sans-serif',
+  mono:    '"Inter",sans-serif',
+  display: '"Inter",sans-serif',
 };
 
 // Collapses the 19 raw fontSize values found in the audit into named steps.

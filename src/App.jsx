@@ -874,13 +874,13 @@ function MapTab({ funds, mapPaths }) {
               return (
                 <g key={`lbl-${region}`} style={{pointerEvents:'none',opacity:visible?1:0.25,transition:'opacity 0.18s'}}>
                   <text x={cx} y={cy-8} textAnchor="middle" fontSize="8"
-                    fontFamily='"DM Mono",monospace' fontWeight="500" letterSpacing="1.5"
+                    fontFamily='"Inter",sans-serif' fontWeight="500" letterSpacing="1.5"
                     fill={isActive?'#fff':'#1a1a1a'} opacity={isActive?0.9:0.7}>
                     {region.toUpperCase()}
                   </text>
                   <circle cx={cx} cy={cy+10} r={14} fill={isActive?'#fff':color} opacity={isActive?0.95:0.9} />
                   <text x={cx} y={cy+10} textAnchor="middle" dy="0.35em" fontSize="12"
-                    fontFamily='"Raleway",sans-serif' fontWeight="800"
+                    fontFamily='"Inter",sans-serif' fontWeight="800"
                     fill={isActive?color:'#fff'}>
                     {count}
                   </text>
@@ -913,7 +913,7 @@ function MapTab({ funds, mapPaths }) {
               <div>
                 <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:4}}>
                   <div style={{width:10,height:10,background:REGION_COLORS[activeRegion],flexShrink:0}} />
-                  <div style={{fontFamily:'"Raleway",sans-serif',fontSize:17,fontWeight:800}}>{activeRegion}</div>
+                  <div style={{fontFamily:font.display,fontSize:17,fontWeight:800}}>{activeRegion}</div>
                 </div>
                 <div style={{fontSize:10,opacity:0.4}}>{regionFunds.length} fund{regionFunds.length!==1?'s':''}</div>
               </div>
@@ -930,7 +930,7 @@ function MapTab({ funds, mapPaths }) {
                     onMouseEnter={e=>e.currentTarget.style.background='#e5dfd6'}
                     onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
                     <div style={{fontSize:9.5,letterSpacing:2,textTransform:'uppercase',color:c,marginBottom:3,fontWeight:500}}>{f.type}</div>
-                    <div style={{fontFamily:'"Raleway",sans-serif',fontSize:14,fontWeight:700,marginBottom:3}}>{f.name}</div>
+                    <div style={{fontFamily:font.display,fontSize:14,fontWeight:700,marginBottom:3}}>{f.name}</div>
                     <div style={{fontSize:11,opacity:0.45,display:'flex',gap:10}}>
                       {f.city && <span>{f.city}</span>}
                       {f.stage && <span>{f.stage}</span>}
@@ -1069,7 +1069,7 @@ export default function App() {
   return (
     <div style={{minHeight:'100vh',background:color.cream,fontFamily:font.mono,color:color.ink}}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Raleway:wght@600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         * { box-sizing:border-box; }
         ::-webkit-scrollbar { width:3px; }
         ::-webkit-scrollbar-track { background:${color.cream}; }
