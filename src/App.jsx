@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
+import { color, font, fontSize, letterSpacing, spacing, layout, radius, regionColors, typeColors, partnerColors } from './lib/tokens.js';
+import { EyebrowLabel, CloseButton, LinkButton, ensureHttp, useHoverCard, KeyValueGrid, PanelHeader } from './lib/components.jsx';
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
@@ -13,16 +15,9 @@ const TABLES = {
 // ─── Constants ────────────────────────────────────────────────────────────────
 const REGIONS = ['West','North West','South West','Mid-West','South East','Mid-Atlantic','North East','Gulf South'];
 
-const REGION_COLORS = {
-  'West':       '#64748b',
-  'North West': '#22c55e',
-  'South West': '#f97316',
-  'Mid-West':   '#eab308',
-  'South East': '#f59e0b',
-  'Mid-Atlantic':'#06b6d4',
-  'North East': '#7c3aed',
-  'Gulf South': '#ef4444',
-};
+// Region/type/partner color maps live in lib/tokens.js — aliased here so the
+// map/geography logic below (do not touch) keeps its original identifiers.
+const REGION_COLORS = regionColors;
 
 // FIPS state code → Region
 const FIPS_REGION = {
@@ -51,27 +46,8 @@ const REGION_LABEL = {
   'Gulf South': [600, 450],
 };
 
-const TYPE_COLORS = {
-  'Venture Fund':    '#c8302a',
-  'Accelerator':     '#1d4ed8',
-  'Economic Dev':    '#15803d',
-  'Government':      '#7c3aed',
-  'University Fund': '#b45309',
-  'Family Office':   '#0e7490',
-  'Angel Group':     '#be185d',
-};
-
-const PARTNER_COLORS = {
-  'Legal':              '#c8302a',
-  'Finance & CFO':      '#15803d',
-  'Brand & Creative':   '#1d4ed8',
-  'PR & Comms':         '#b45309',
-  'Recruiting':         '#7c3aed',
-  'Accounting':         '#0e7490',
-  'Coworking':          '#be185d',
-  'Events & Community': '#d97706',
-  'Other':              '#888',
-};
+const TYPE_COLORS = typeColors;
+const PARTNER_COLORS = partnerColors;
 
 const SIZE_BUCKETS = ['Micro (<$10M)','Small ($10–50M)','Mid ($50–150M)','Large ($150M+)'];
 
@@ -142,26 +118,26 @@ function MultiSelect({ label, options, selected, onChange }) {
   return (
     <div ref={ref} style={{position:'relative',display:'inline-block'}}>
       <button onMouseDown={e=>{e.preventDefault();setOpen(o=>!o)}} style={{
-        background:active?'#1a1a1a':'transparent',color:active?'#faf6f0':'#1a1a1a',
-        border:'1px solid #1a1a1a',padding:'7px 11px',
-        fontSize:11,fontFamily:'"DM Mono",monospace',cursor:'pointer',
+        background:active?color.ink:'transparent',color:active?color.cream:color.ink,
+        border:`1px solid ${color.ink}`,padding:'7px 11px',
+        fontSize:fontSize.smd,fontFamily:font.mono,cursor:'pointer',
         minWidth:118,outline:'none',WebkitAppearance:'none',appearance:'none',
         userSelect:'none',WebkitUserSelect:'none',MozUserSelect:'none',
         display:'flex',alignItems:'center',justifyContent:'space-between',gap:6,
       }}>
         <span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',maxWidth:100,flex:1}}>{lbl}</span>
-        <span style={{fontSize:9,flexShrink:0,lineHeight:1}}>▾</span>
+        <span style={{fontSize:fontSize.xs,flexShrink:0,lineHeight:1}}>▾</span>
       </button>
       {open && (
         <div style={{position:'absolute',top:'100%',left:0,zIndex:300,
-          background:'#faf6f0',border:'1px solid #1a1a1a',borderTop:'none',
+          background:color.cream,border:`1px solid ${color.ink}`,borderTop:'none',
           minWidth:200,maxHeight:280,overflowY:'auto',
           boxShadow:'0 4px 20px rgba(0,0,0,0.12)'}}>
           {count>0 && (
             <div onMouseDown={e=>{e.preventDefault();onChange([]);setOpen(false)}}
-              style={{padding:'8px 12px',fontSize:10,letterSpacing:2,color:'#c8302a',
-                cursor:'pointer',borderBottom:'1px solid #e8e3db',textTransform:'uppercase'}}
-              onMouseEnter={e=>e.currentTarget.style.background='#f5f0e8'}
+              style={{padding:'8px 12px',fontSize:fontSize.sm,letterSpacing:letterSpacing.wide,color:color.brandRed,
+                cursor:'pointer',borderBottom:`1px solid ${color.borderSoft}`,textTransform:'uppercase'}}
+              onMouseEnter={e=>e.currentTarget.style.background=color.bgFaint}
               onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
               CLEAR SELECTION
             </div>
@@ -170,13 +146,13 @@ function MultiSelect({ label, options, selected, onChange }) {
             const sel=selected.includes(opt);
             return (
               <div key={opt} onMouseDown={e=>{e.preventDefault();toggle(opt)}}
-                style={{padding:'8px 12px',fontSize:11,fontFamily:'"DM Mono",monospace',
+                style={{padding:'8px 12px',fontSize:fontSize.smd,fontFamily:font.mono,
                   cursor:'pointer',display:'flex',alignItems:'center',gap:8,
-                  background:sel?'#1a1a1a':'transparent',color:sel?'#faf6f0':'#1a1a1a',userSelect:'none'}}
-                onMouseEnter={e=>{if(!sel)e.currentTarget.style.background='#f0ebe3'}}
+                  background:sel?color.ink:'transparent',color:sel?color.cream:color.ink,userSelect:'none'}}
+                onMouseEnter={e=>{if(!sel)e.currentTarget.style.background=color.bgSubtle}}
                 onMouseLeave={e=>{if(!sel)e.currentTarget.style.background='transparent'}}>
                 <span style={{width:12,height:12,flexShrink:0,display:'inline-flex',alignItems:'center',
-                  justifyContent:'center',fontSize:9,border:`1px solid ${sel?'#faf6f0':'#1a1a1a'}`}}>
+                  justifyContent:'center',fontSize:fontSize.xs,border:`1px solid ${sel?color.cream:color.ink}`}}>
                   {sel?'✓':''}
                 </span>
                 {opt}
@@ -194,9 +170,9 @@ function SlidePanel({ onClose, children }) {
   return (
     <>
       <div onClick={onClose} style={{position:'fixed',inset:0,zIndex:99,background:'rgba(0,0,0,0.32)'}} />
-      <div className="en-slide-panel" style={{position:'fixed',top:0,right:0,width:440,height:'100vh',
-        background:'#faf6f0',borderLeft:'2px solid #1a1a1a',zIndex:100,
-        display:'flex',flexDirection:'column',fontFamily:'"DM Mono",monospace',
+      <div className="en-slide-panel" style={{position:'fixed',top:0,right:0,width:layout.panelWidth,height:'100vh',
+        background:color.cream,borderLeft:`2px solid ${color.ink}`,zIndex:100,
+        display:'flex',flexDirection:'column',fontFamily:font.mono,
         boxShadow:'-8px 0 40px rgba(0,0,0,0.15)'}}>
         {children}
       </div>
@@ -206,7 +182,7 @@ function SlidePanel({ onClose, children }) {
 
 // ─── Fund detail panel ────────────────────────────────────────────────────────
 function FundPanel({ fund, onClose, investors=[], onSelectInvestor }) {
-  const color = TYPE_COLORS[fund.type]||'#888';
+  const typeColor = TYPE_COLORS[fund.type]||color.muted;
   const bucket = fundSizeBucket(fund.size);
   const gps = [
     fund.gp1?{name:fund.gp1,li:fund.gp1li}:null,
@@ -218,75 +194,65 @@ function FundPanel({ fund, onClose, investors=[], onSelectInvestor }) {
   );
   return (
     <SlidePanel onClose={onClose}>
-      <div style={{padding:'16px 28px',borderBottom:'1px solid #1a1a1a',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-        <span style={{fontSize:10,letterSpacing:2.5,textTransform:'uppercase',color,fontWeight:500}}>{fund.type}</span>
-        <button onClick={onClose} style={{background:'none',border:'none',cursor:'pointer',fontSize:22,lineHeight:1,color:'#1a1a1a',padding:0,outline:'none'}}>×</button>
-      </div>
+      <PanelHeader label={fund.type} color={typeColor} onClose={onClose} />
       <div style={{padding:'26px 28px',overflowY:'auto',flex:1}}>
-        <div style={{fontSize:9,letterSpacing:3,textTransform:'uppercase',color:REGION_COLORS[fund.region]||'#999',marginBottom:4,fontWeight:500}}>{fund.region}</div>
-        <h2 style={{fontFamily:'"Raleway",sans-serif',fontSize:22,fontWeight:800,margin:'0 0 4px',lineHeight:1.2}}>{fund.name}</h2>
-        <div style={{fontSize:12,color:'#888',marginBottom:22}}>{fund.city}{fund.state?`, ${fund.state}`:''}</div>
+        <EyebrowLabel marginBottom={4} style={{color:REGION_COLORS[fund.region]||color.mutedSoft}}>{fund.region}</EyebrowLabel>
+        <h2 style={{fontFamily:font.display,fontSize:fontSize.display1,fontWeight:800,margin:'0 0 4px',lineHeight:1.2}}>{fund.name}</h2>
+        <div style={{fontSize:fontSize.base,color:color.muted,marginBottom:22}}>{fund.city}{fund.state?`, ${fund.state}`:''}</div>
         {fund.thesis && (
           <div style={{marginBottom:20}}>
-            <div style={{fontSize:9,letterSpacing:3,textTransform:'uppercase',color:'#999',marginBottom:8}}>THESIS</div>
-            <p style={{fontSize:13.5,lineHeight:1.75,margin:0}}>{fund.thesis}</p>
+            <EyebrowLabel>THESIS</EyebrowLabel>
+            <p style={{fontSize:fontSize.basemdPlus,lineHeight:1.75,margin:0}}>{fund.thesis}</p>
           </div>
         )}
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'14px 20px',marginBottom:20}}>
-          {[['Stage',fund.stage],['Fund Size',fund.size?`${fund.size} · ${bucket}`:''],['Vintage',fund.vintage?`Est. ${fund.vintage}`:'']].filter(([,v])=>v).map(([l,v])=>(
-            <div key={l}>
-              <div style={{fontSize:9,letterSpacing:3,textTransform:'uppercase',color:'#999',marginBottom:4}}>{l}</div>
-              <div style={{fontSize:13.5}}>{v}</div>
-            </div>
-          ))}
-        </div>
+        <KeyValueGrid pairs={[['Stage',fund.stage],['Fund Size',fund.size?`${fund.size} · ${bucket}`:''],['Vintage',fund.vintage?`Est. ${fund.vintage}`:'']]} />
         {gps.length>0 && (
           <div style={{marginBottom:20}}>
-            <div style={{fontSize:9,letterSpacing:3,textTransform:'uppercase',color:'#999',marginBottom:10}}>GENERAL PARTNER{gps.length>1?'S':''}</div>
+            <EyebrowLabel marginBottom={10}>GENERAL PARTNER{gps.length>1?'S':''}</EyebrowLabel>
             {gps.map((gp,i)=>(
               <div key={i} style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:8}}>
-                <span style={{fontSize:13.5}}>{gp.name}</span>
-                {gp.li && <a href={gp.li} target="_blank" rel="noopener noreferrer" style={{fontSize:10,letterSpacing:1.5,textTransform:'uppercase',color,borderBottom:`1px solid ${color}`,textDecoration:'none',paddingBottom:1}}>LinkedIn</a>}
+                <span style={{fontSize:fontSize.basemdPlus}}>{gp.name}</span>
+                {gp.li && <a href={gp.li} target="_blank" rel="noopener noreferrer" style={{fontSize:fontSize.sm,letterSpacing:letterSpacing.normal,textTransform:'uppercase',color:typeColor,borderBottom:`1px solid ${typeColor}`,textDecoration:'none',paddingBottom:1}}>LinkedIn</a>}
               </div>
             ))}
           </div>
         )}
         {linkedInvestors.length>0 && (
           <div style={{marginBottom:20}}>
-            <div style={{fontSize:9,letterSpacing:3,textTransform:'uppercase',color:'#999',marginBottom:10}}>INVESTORS ON FILE</div>
+            <EyebrowLabel marginBottom={10}>INVESTORS ON FILE</EyebrowLabel>
             {linkedInvestors.map(inv=>(
               <div key={inv.id} onClick={()=>onSelectInvestor&&onSelectInvestor(inv)}
                 style={{display:'flex',alignItems:'center',gap:12,padding:'10px 12px',
-                  marginBottom:6,border:'1px solid #e8e3db',cursor:'pointer',background:'#faf6f0'}}
-                onMouseEnter={e=>e.currentTarget.style.background='#f0ebe3'}
-                onMouseLeave={e=>e.currentTarget.style.background='#faf6f0'}>
-                <div style={{width:32,height:32,borderRadius:'50%',background:'#1a1a1a',display:'flex',
+                  marginBottom:6,border:`1px solid ${color.borderSoft}`,cursor:'pointer',background:color.cream}}
+                onMouseEnter={e=>e.currentTarget.style.background=color.bgSubtle}
+                onMouseLeave={e=>e.currentTarget.style.background=color.cream}>
+                <div style={{width:32,height:32,borderRadius:'50%',background:color.ink,display:'flex',
                   alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                  <span style={{color:'#faf6f0',fontFamily:'"Raleway",sans-serif',fontWeight:800,fontSize:13}}>{(inv.name||'?')[0]}</span>
+                  <span style={{color:color.cream,fontFamily:font.display,fontWeight:800,fontSize:fontSize.basemd}}>{(inv.name||'?')[0]}</span>
                 </div>
                 <div style={{flex:1,minWidth:0}}>
-                  <div style={{fontSize:13,fontWeight:600,fontFamily:'"Raleway",sans-serif'}}>{inv.name}</div>
-                  <div style={{fontSize:10,opacity:0.5}}>{inv.title}</div>
+                  <div style={{fontSize:fontSize.basemd,fontWeight:600,fontFamily:font.display}}>{inv.name}</div>
+                  <div style={{fontSize:fontSize.sm,opacity:0.5}}>{inv.title}</div>
                 </div>
-                <span style={{fontSize:10,opacity:0.35}}>→</span>
+                <span style={{fontSize:fontSize.sm,opacity:0.35}}>→</span>
               </div>
             ))}
           </div>
         )}
         {fund.industries && (
           <div style={{marginBottom:20}}>
-            <div style={{fontSize:9,letterSpacing:3,textTransform:'uppercase',color:'#999',marginBottom:8}}>SECTORS</div>
+            <EyebrowLabel>SECTORS</EyebrowLabel>
             <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
               {fund.industries.split(',').map(i=>i.trim()).filter(Boolean).map(i=>(
-                <span key={i} style={{border:`1px solid ${color}`,color,fontSize:10,padding:'3px 9px'}}>{i}</span>
+                <span key={i} style={{border:`1px solid ${typeColor}`,color:typeColor,fontSize:fontSize.sm,padding:'3px 9px'}}>{i}</span>
               ))}
             </div>
           </div>
         )}
         <div style={{display:'flex',flexDirection:'column',gap:8,marginTop:20}}>
-          {fund.website && <a href={fund.website} target="_blank" rel="noopener noreferrer" style={{display:'inline-flex',alignItems:'center',gap:8,padding:'10px 18px',background:'#1a1a1a',color:'#faf6f0',fontSize:10,letterSpacing:2,textTransform:'uppercase',textDecoration:'none',width:'fit-content'}}>↗ WEBSITE</a>}
-          {fund.linkedin && <a href={fund.linkedin} target="_blank" rel="noopener noreferrer" style={{display:'inline-flex',alignItems:'center',gap:8,padding:'10px 18px',border:'1px solid #1a1a1a',color:'#1a1a1a',fontSize:10,letterSpacing:2,textTransform:'uppercase',textDecoration:'none',width:'fit-content'}}>LinkedIn</a>}
-          {fund.email && <a href={`mailto:${fund.email}`} style={{display:'inline-flex',alignItems:'center',gap:8,padding:'10px 18px',border:'1px solid #ccc',color:'#555',fontSize:10,letterSpacing:2,textTransform:'uppercase',textDecoration:'none',width:'fit-content'}}>✉ {fund.email}</a>}
+          {fund.website && <LinkButton href={fund.website} variant="solid">↗ WEBSITE</LinkButton>}
+          {fund.linkedin && <LinkButton href={fund.linkedin} variant="outline">LinkedIn</LinkButton>}
+          {fund.email && <LinkButton href={`mailto:${fund.email}`} variant="muted">✉ {fund.email}</LinkButton>}
         </div>
       </div>
     </SlidePanel>
@@ -299,72 +265,62 @@ function InvestorPanel({ inv, onClose, funds=[], onSelectFund }) {
     f.name && inv.fund && f.name.toLowerCase().trim() === inv.fund.toLowerCase().trim()
   );
   const fundType = linkedFund?.type || 'Venture Fund';
-  const fundColor = TYPE_COLORS[fundType] || '#888';
+  const fundColor = TYPE_COLORS[fundType] || color.muted;
   return (
     <SlidePanel onClose={onClose}>
-      <div style={{padding:'16px 28px',borderBottom:'1px solid #1a1a1a',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-        <span style={{fontSize:10,letterSpacing:2.5,textTransform:'uppercase',color:'#888',fontWeight:500}}>INVESTOR</span>
-        <button onClick={onClose} style={{background:'none',border:'none',cursor:'pointer',fontSize:22,lineHeight:1,color:'#1a1a1a',padding:0,outline:'none'}}>×</button>
-      </div>
+      <PanelHeader label="INVESTOR" onClose={onClose} />
       <div style={{padding:'26px 28px',overflowY:'auto',flex:1}}>
-        <div style={{width:56,height:56,borderRadius:'50%',background:'#1a1a1a',display:'flex',alignItems:'center',justifyContent:'center',marginBottom:16}}>
-          <span style={{color:'#faf6f0',fontFamily:'"Raleway",sans-serif',fontWeight:800,fontSize:20}}>{(inv.name||'?')[0]}</span>
+        <div style={{width:56,height:56,borderRadius:'50%',background:color.ink,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:16}}>
+          <span style={{color:color.cream,fontFamily:font.display,fontWeight:800,fontSize:fontSize.xxl}}>{(inv.name||'?')[0]}</span>
         </div>
-        <h2 style={{fontFamily:'"Raleway",sans-serif',fontSize:22,fontWeight:800,margin:'0 0 3px',lineHeight:1.2}}>{inv.name}</h2>
-        <div style={{fontSize:12,color:'#888',marginBottom:3}}>{inv.title}</div>
-        <div style={{fontSize:12,color:fundColor,marginBottom:22,fontWeight:500,letterSpacing:0.5}}>{inv.fund}</div>
+        <h2 style={{fontFamily:font.display,fontSize:fontSize.display1,fontWeight:800,margin:'0 0 3px',lineHeight:1.2}}>{inv.name}</h2>
+        <div style={{fontSize:fontSize.base,color:color.muted,marginBottom:3}}>{inv.title}</div>
+        <div style={{fontSize:fontSize.base,color:fundColor,marginBottom:22,fontWeight:500,letterSpacing:letterSpacing.tight}}>{inv.fund}</div>
         {inv.thesis && (
           <div style={{marginBottom:20}}>
-            <div style={{fontSize:9,letterSpacing:3,textTransform:'uppercase',color:'#999',marginBottom:8}}>INVESTMENT THESIS</div>
-            <p style={{fontSize:13.5,lineHeight:1.75,margin:0}}>{inv.thesis}</p>
+            <EyebrowLabel>INVESTMENT THESIS</EyebrowLabel>
+            <p style={{fontSize:fontSize.basemdPlus,lineHeight:1.75,margin:0}}>{inv.thesis}</p>
           </div>
         )}
         {inv.portfolio && (
           <div style={{marginBottom:20}}>
-            <div style={{fontSize:9,letterSpacing:3,textTransform:'uppercase',color:'#999',marginBottom:8}}>NOTABLE PORTFOLIO</div>
+            <EyebrowLabel>NOTABLE PORTFOLIO</EyebrowLabel>
             <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
               {inv.portfolio.split(',').map(c=>c.trim()).filter(Boolean).map(c=>(
-                <span key={c} style={{border:'1px solid #1a1a1a',fontSize:10,padding:'3px 9px'}}>{c}</span>
+                <span key={c} style={{border:`1px solid ${color.ink}`,fontSize:fontSize.sm,padding:'3px 9px'}}>{c}</span>
               ))}
             </div>
           </div>
         )}
         {linkedFund && (
           <div style={{marginBottom:20}}>
-            <div style={{fontSize:9,letterSpacing:3,textTransform:'uppercase',color:'#999',marginBottom:10}}>ABOUT THEIR FUND</div>
+            <EyebrowLabel marginBottom={10}>ABOUT THEIR FUND</EyebrowLabel>
             <div onClick={()=>onSelectFund&&onSelectFund(linkedFund)}
-              style={{padding:'14px 16px',border:'1px solid #e8e3db',cursor:'pointer',background:'#faf6f0'}}
-              onMouseEnter={e=>e.currentTarget.style.background='#f0ebe3'}
-              onMouseLeave={e=>e.currentTarget.style.background='#faf6f0'}>
-              <div style={{fontSize:10,letterSpacing:2,textTransform:'uppercase',
-                color:TYPE_COLORS[linkedFund.type]||'#888',fontWeight:500,marginBottom:4}}>{linkedFund.type}</div>
-              <div style={{fontFamily:'"Raleway",sans-serif',fontSize:15,fontWeight:700,marginBottom:6}}>{linkedFund.name}</div>
+              style={{padding:'14px 16px',border:`1px solid ${color.borderSoft}`,cursor:'pointer',background:color.cream}}
+              onMouseEnter={e=>e.currentTarget.style.background=color.bgSubtle}
+              onMouseLeave={e=>e.currentTarget.style.background=color.cream}>
+              <div style={{fontSize:fontSize.sm,letterSpacing:letterSpacing.wide,textTransform:'uppercase',
+                color:TYPE_COLORS[linkedFund.type]||color.muted,fontWeight:500,marginBottom:4}}>{linkedFund.type}</div>
+              <div style={{fontFamily:font.display,fontSize:fontSize.mdlg,fontWeight:700,marginBottom:6}}>{linkedFund.name}</div>
               {linkedFund.thesis && (
-                <div style={{fontSize:12,lineHeight:1.65,opacity:0.65,marginBottom:8,
+                <div style={{fontSize:fontSize.base,lineHeight:1.65,opacity:0.65,marginBottom:8,
                   display:'-webkit-box',WebkitLineClamp:3,WebkitBoxOrient:'vertical',overflow:'hidden'}}>
                   {linkedFund.thesis}
                 </div>
               )}
-              <div style={{display:'flex',gap:12,fontSize:11,opacity:0.45}}>
+              <div style={{display:'flex',gap:12,fontSize:fontSize.smd,opacity:0.45}}>
                 {linkedFund.stage && <span>{linkedFund.stage}</span>}
                 {linkedFund.size && linkedFund.size.startsWith('$') && <span>{linkedFund.size}</span>}
                 {linkedFund.region && <span>{linkedFund.region}</span>}
               </div>
-              <div style={{fontSize:10,opacity:0.3,marginTop:8,textAlign:'right'}}>View Fund →</div>
+              <div style={{fontSize:fontSize.sm,opacity:0.3,marginTop:8,textAlign:'right'}}>View Fund →</div>
             </div>
           </div>
         )}
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'14px 20px',marginBottom:20}}>
-          {[['Region',inv.region],['City',inv.city]].filter(([,v])=>v).map(([l,v])=>(
-            <div key={l}>
-              <div style={{fontSize:9,letterSpacing:3,textTransform:'uppercase',color:'#999',marginBottom:4}}>{l}</div>
-              <div style={{fontSize:13.5}}>{v}</div>
-            </div>
-          ))}
-        </div>
+        <KeyValueGrid pairs={[['Region',inv.region],['City',inv.city]]} />
         <div style={{display:'flex',flexDirection:'column',gap:8,marginTop:20}}>
-          {inv.linkedin && <a href={inv.linkedin} target="_blank" rel="noopener noreferrer" style={{display:'inline-flex',alignItems:'center',gap:8,padding:'10px 18px',background:'#1a1a1a',color:'#faf6f0',fontSize:10,letterSpacing:2,textTransform:'uppercase',textDecoration:'none',width:'fit-content'}}>LinkedIn</a>}
-          {inv.email && <a href={`mailto:${inv.email}`} style={{display:'inline-flex',alignItems:'center',gap:8,padding:'10px 18px',border:'1px solid #ccc',color:'#555',fontSize:10,letterSpacing:2,textTransform:'uppercase',textDecoration:'none',width:'fit-content'}}>✉ {inv.email}</a>}
+          {inv.linkedin && <LinkButton href={inv.linkedin} variant="solid">LinkedIn</LinkButton>}
+          {inv.email && <LinkButton href={`mailto:${inv.email}`} variant="muted">✉ {inv.email}</LinkButton>}
         </div>
       </div>
     </SlidePanel>
@@ -373,34 +329,30 @@ function InvestorPanel({ inv, onClose, funds=[], onSelectFund }) {
 
 // ─── Partner detail panel ─────────────────────────────────────────────────────
 function PartnerPanel({ partner, onClose }) {
-  const color = PARTNER_COLORS[partner.category]||'#888';
-  const ensureHttp = s => s ? (s.startsWith('http')?s:`https://${s}`) : '';
+  const catColor = PARTNER_COLORS[partner.category]||color.muted;
   return (
     <SlidePanel onClose={onClose}>
-      <div style={{padding:'16px 28px',borderBottom:'1px solid #1a1a1a',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-        <span style={{fontSize:10,letterSpacing:2.5,textTransform:'uppercase',color,fontWeight:500}}>{partner.category}</span>
-        <button onClick={onClose} style={{background:'none',border:'none',cursor:'pointer',fontSize:22,lineHeight:1,color:'#1a1a1a',padding:0,outline:'none'}}>×</button>
-      </div>
+      <PanelHeader label={partner.category} color={catColor} onClose={onClose} />
       <div style={{padding:'26px 28px',overflowY:'auto',flex:1}}>
-        <div style={{fontSize:9,letterSpacing:3,textTransform:'uppercase',color:REGION_COLORS[partner.region]||'#999',marginBottom:4,fontWeight:500}}>{partner.region}</div>
-        <h2 style={{fontFamily:'"Raleway",sans-serif',fontSize:22,fontWeight:800,margin:'0 0 4px',lineHeight:1.2}}>{partner.name}</h2>
-        {partner.city && <div style={{fontSize:12,color:'#888',marginBottom:22}}>{partner.city}</div>}
+        <EyebrowLabel marginBottom={4} style={{color:REGION_COLORS[partner.region]||color.mutedSoft}}>{partner.region}</EyebrowLabel>
+        <h2 style={{fontFamily:font.display,fontSize:fontSize.display1,fontWeight:800,margin:'0 0 4px',lineHeight:1.2}}>{partner.name}</h2>
+        {partner.city && <div style={{fontSize:fontSize.base,color:color.muted,marginBottom:22}}>{partner.city}</div>}
         {partner.description && (
           <div style={{marginBottom:20}}>
-            <div style={{fontSize:9,letterSpacing:3,textTransform:'uppercase',color:'#999',marginBottom:8}}>ABOUT</div>
-            <p style={{fontSize:13.5,lineHeight:1.75,margin:0}}>{partner.description}</p>
+            <EyebrowLabel>ABOUT</EyebrowLabel>
+            <p style={{fontSize:fontSize.basemdPlus,lineHeight:1.75,margin:0}}>{partner.description}</p>
           </div>
         )}
         {partner.contact && (
           <div style={{marginBottom:20}}>
-            <div style={{fontSize:9,letterSpacing:3,textTransform:'uppercase',color:'#999',marginBottom:8}}>KEY CONTACT</div>
-            <div style={{fontSize:13.5}}>{partner.contact}</div>
+            <EyebrowLabel>KEY CONTACT</EyebrowLabel>
+            <div style={{fontSize:fontSize.basemdPlus}}>{partner.contact}</div>
           </div>
         )}
         <div style={{display:'flex',flexDirection:'column',gap:8,marginTop:20}}>
-          {partner.website && <a href={ensureHttp(partner.website)} target="_blank" rel="noopener noreferrer" style={{display:'inline-flex',alignItems:'center',gap:8,padding:'10px 18px',background:'#1a1a1a',color:'#faf6f0',fontSize:10,letterSpacing:2,textTransform:'uppercase',textDecoration:'none',width:'fit-content'}}>↗ WEBSITE</a>}
-          {partner.linkedin && <a href={ensureHttp(partner.linkedin)} target="_blank" rel="noopener noreferrer" style={{display:'inline-flex',alignItems:'center',gap:8,padding:'10px 18px',border:'1px solid #1a1a1a',color:'#1a1a1a',fontSize:10,letterSpacing:2,textTransform:'uppercase',textDecoration:'none',width:'fit-content'}}>LinkedIn</a>}
-          {partner.email && <a href={`mailto:${partner.email}`} style={{display:'inline-flex',alignItems:'center',gap:8,padding:'10px 18px',border:'1px solid #ccc',color:'#555',fontSize:10,letterSpacing:2,textTransform:'uppercase',textDecoration:'none',width:'fit-content'}}>✉ {partner.email}</a>}
+          {partner.website && <LinkButton href={ensureHttp(partner.website)} variant="solid">↗ WEBSITE</LinkButton>}
+          {partner.linkedin && <LinkButton href={ensureHttp(partner.linkedin)} variant="outline">LinkedIn</LinkButton>}
+          {partner.email && <LinkButton href={`mailto:${partner.email}`} variant="muted">✉ {partner.email}</LinkButton>}
         </div>
       </div>
     </SlidePanel>
@@ -409,25 +361,23 @@ function PartnerPanel({ partner, onClose }) {
 
 // ─── Fund card ────────────────────────────────────────────────────────────────
 function FundCard({ fund, onClick }) {
-  const [hov,setHov] = useState(false);
-  const color = TYPE_COLORS[fund.type]||'#888';
+  const { hov, hoverProps, cardStyle } = useHoverCard();
+  const typeColor = TYPE_COLORS[fund.type]||color.muted;
   const bucket = fundSizeBucket(fund.size);
   return (
-    <div onClick={()=>onClick(fund)} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
-      style={{padding:'20px 22px',cursor:'pointer',background:hov?'#1a1a1a':'#faf6f0',
-        color:hov?'#faf6f0':'#1a1a1a',transition:'all 0.12s',height:'100%'}}>
+    <div onClick={()=>onClick(fund)} {...hoverProps} style={cardStyle}>
       <div style={{display:'flex',justifyContent:'space-between',marginBottom:9}}>
-        <span style={{fontSize:10,letterSpacing:2,textTransform:'uppercase',color:hov?'#aaa':color,fontWeight:500}}>{fund.type}</span>
-        <span style={{fontSize:10,opacity:0.5}}>{fund.region}</span>
+        <span style={{fontSize:fontSize.sm,letterSpacing:letterSpacing.wide,textTransform:'uppercase',color:hov?color.hoverText:typeColor,fontWeight:500}}>{fund.type}</span>
+        <span style={{fontSize:fontSize.sm,opacity:0.5}}>{fund.region}</span>
       </div>
-      <div style={{fontFamily:'"Raleway",sans-serif',fontSize:16,fontWeight:700,marginBottom:8,lineHeight:1.3}}>{fund.name}</div>
+      <div style={{fontFamily:font.display,fontSize:fontSize.lg,fontWeight:700,marginBottom:8,lineHeight:1.3}}>{fund.name}</div>
       {fund.thesis && (
-        <div style={{fontSize:12,lineHeight:1.65,opacity:0.65,marginBottom:11,
+        <div style={{fontSize:fontSize.base,lineHeight:1.65,opacity:0.65,marginBottom:11,
           display:'-webkit-box',WebkitLineClamp:3,WebkitBoxOrient:'vertical',overflow:'hidden'}}>
           {fund.thesis}
         </div>
       )}
-      <div style={{display:'flex',gap:14,fontSize:11,opacity:0.5,flexWrap:'wrap'}}>
+      <div style={{display:'flex',gap:14,fontSize:fontSize.smd,opacity:0.5,flexWrap:'wrap'}}>
         {fund.stage && <span>▸ {fund.stage}</span>}
         {bucket!=='N/A' && <span>{bucket}</span>}
         {fund.vintage && <span>Est. {fund.vintage}</span>}
@@ -438,29 +388,26 @@ function FundCard({ fund, onClick }) {
 
 // ─── Investor card ────────────────────────────────────────────────────────────
 function InvestorCard({ inv, funds=[], onClick }) {
-  const [hov,setHov] = useState(false);
-  // Find the fund in the funds array to get its type
+  const { hov, hoverProps, cardStyle } = useHoverCard();
   const fundData = funds.find(f => f.name && inv.fund && f.name.toLowerCase().trim() === inv.fund.toLowerCase().trim());
-  const fundType = fundData?.type || 'Venture Fund'; // fallback to default type
-  const color = TYPE_COLORS[fundType] || '#888';
+  const fundType = fundData?.type || 'Venture Fund';
+  const typeColor = TYPE_COLORS[fundType] || color.muted;
   return (
-    <div onClick={()=>onClick(inv)} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
-      style={{padding:'20px 22px',cursor:'pointer',background:hov?'#1a1a1a':'#faf6f0',
-        color:hov?'#faf6f0':'#1a1a1a',transition:'all 0.12s',height:'100%'}}>
+    <div onClick={()=>onClick(inv)} {...hoverProps} style={cardStyle}>
       <div style={{display:'flex',alignItems:'center',gap:14,marginBottom:12}}>
-        <div style={{width:42,height:42,borderRadius:'50%',background:hov?'#faf6f0':'#1a1a1a',
+        <div style={{width:42,height:42,borderRadius:'50%',background:hov?color.cream:color.ink,
           display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,transition:'all 0.12s'}}>
-          <span style={{color:hov?'#1a1a1a':'#faf6f0',fontFamily:'"Raleway",sans-serif',fontWeight:800,fontSize:17,transition:'all 0.12s'}}>{(inv.name||'?')[0]}</span>
+          <span style={{color:hov?color.ink:color.cream,fontFamily:font.display,fontWeight:800,fontSize:fontSize.lg2,transition:'all 0.12s'}}>{(inv.name||'?')[0]}</span>
         </div>
         <div style={{minWidth:0}}>
-          <div style={{fontFamily:'"Raleway",sans-serif',fontSize:15,fontWeight:700,lineHeight:1.2}}>{inv.name}</div>
-          <div style={{fontSize:11,opacity:0.5,marginTop:2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{inv.title}</div>
+          <div style={{fontFamily:font.display,fontSize:fontSize.mdlg,fontWeight:700,lineHeight:1.2}}>{inv.name}</div>
+          <div style={{fontSize:fontSize.smd,opacity:0.5,marginTop:2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{inv.title}</div>
         </div>
       </div>
-      <div style={{fontSize:10,letterSpacing:1.5,textTransform:'uppercase',
-        color:hov?'#aaa':color,fontWeight:500,marginBottom:8}}>{inv.fund}</div>
+      <div style={{fontSize:fontSize.sm,letterSpacing:letterSpacing.normal,textTransform:'uppercase',
+        color:hov?color.hoverText:typeColor,fontWeight:500,marginBottom:8}}>{inv.fund}</div>
       {inv.thesis && (
-        <div style={{fontSize:11,lineHeight:1.6,opacity:0.6,
+        <div style={{fontSize:fontSize.smd,lineHeight:1.6,opacity:0.6,
           display:'-webkit-box',WebkitLineClamp:3,WebkitBoxOrient:'vertical',overflow:'hidden'}}>
           {inv.thesis}
         </div>
@@ -471,24 +418,22 @@ function InvestorCard({ inv, funds=[], onClick }) {
 
 // ─── Partner card ─────────────────────────────────────────────────────────────
 function PartnerCard({ partner, onClick }) {
-  const [hov,setHov] = useState(false);
-  const color = PARTNER_COLORS[partner.category]||'#888';
+  const { hov, hoverProps, cardStyle } = useHoverCard();
+  const catColor = PARTNER_COLORS[partner.category]||color.muted;
   return (
-    <div onClick={()=>onClick(partner)} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
-      style={{padding:'20px 22px',cursor:'pointer',background:hov?'#1a1a1a':'#faf6f0',
-        color:hov?'#faf6f0':'#1a1a1a',transition:'all 0.12s',height:'100%'}}>
+    <div onClick={()=>onClick(partner)} {...hoverProps} style={cardStyle}>
       <div style={{display:'flex',justifyContent:'space-between',marginBottom:9}}>
-        <span style={{fontSize:10,letterSpacing:2,textTransform:'uppercase',color:hov?'#aaa':color,fontWeight:500}}>{partner.category}</span>
-        <span style={{fontSize:10,opacity:0.5}}>{partner.region}</span>
+        <span style={{fontSize:fontSize.sm,letterSpacing:letterSpacing.wide,textTransform:'uppercase',color:hov?color.hoverText:catColor,fontWeight:500}}>{partner.category}</span>
+        <span style={{fontSize:fontSize.sm,opacity:0.5}}>{partner.region}</span>
       </div>
-      <div style={{fontFamily:'"Raleway",sans-serif',fontSize:16,fontWeight:700,marginBottom:8,lineHeight:1.3}}>{partner.name}</div>
+      <div style={{fontFamily:font.display,fontSize:fontSize.lg,fontWeight:700,marginBottom:8,lineHeight:1.3}}>{partner.name}</div>
       {partner.description && (
-        <div style={{fontSize:12,lineHeight:1.65,opacity:0.65,marginBottom:11,
+        <div style={{fontSize:fontSize.base,lineHeight:1.65,opacity:0.65,marginBottom:11,
           display:'-webkit-box',WebkitLineClamp:3,WebkitBoxOrient:'vertical',overflow:'hidden'}}>
           {partner.description}
         </div>
       )}
-      {partner.contact && <div style={{fontSize:11,opacity:0.45}}>Contact: {partner.contact}</div>}
+      {partner.contact && <div style={{fontSize:fontSize.smd,opacity:0.45}}>Contact: {partner.contact}</div>}
     </div>
   );
 }
@@ -496,27 +441,27 @@ function PartnerCard({ partner, onClick }) {
 // ─── Filter bar ───────────────────────────────────────────────────────────────
 function FilterBar({ search, setSearch, filters, hasFilters, onClearAll, resultCount, loading }) {
   return (
-    <div className="en-filterbar" style={{padding:'12px 48px',borderBottom:'1px solid #d4cfc7',display:'flex',
-      gap:8,alignItems:'center',flexWrap:'wrap',background:'#f0ebe3'}}>
+    <div className="en-filterbar" style={{padding:'12px 48px',borderBottom:`1px solid ${color.border}`,display:'flex',
+      gap:8,alignItems:'center',flexWrap:'wrap',background:color.bgSubtle}}>
       <div style={{position:'relative',display:'flex',alignItems:'center'}}>
         <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search…"
-          style={{background:'transparent',border:'1px solid #1a1a1a',padding:'7px 32px 7px 12px',
-            fontSize:11,fontFamily:'"DM Mono",monospace',outline:'none',minWidth:220,color:'#1a1a1a'}} />
+          style={{background:'transparent',border:`1px solid ${color.ink}`,padding:'7px 32px 7px 12px',
+            fontSize:fontSize.smd,fontFamily:font.mono,outline:'none',minWidth:220,color:color.ink}} />
         {search && (
           <button onClick={()=>setSearch('')} style={{position:'absolute',right:8,background:'none',
-            border:'none',cursor:'pointer',fontSize:17,lineHeight:1,color:'#999',padding:0,outline:'none',
+            border:'none',cursor:'pointer',fontSize:fontSize.lg2,lineHeight:1,color:color.mutedSoft,padding:0,outline:'none',
             display:'flex',alignItems:'center',justifyContent:'center'}}>×</button>
         )}
       </div>
       {filters}
       {hasFilters && (
-        <button onClick={onClearAll} style={{background:'none',border:'1px solid #c8302a',color:'#c8302a',
-          padding:'7px 14px',fontSize:10,letterSpacing:2,textTransform:'uppercase',
-          fontFamily:'"DM Mono",monospace',cursor:'pointer',outline:'none'}}>
+        <button onClick={onClearAll} style={{background:'none',border:`1px solid ${color.brandRed}`,color:color.brandRed,
+          padding:'7px 14px',fontSize:fontSize.sm,letterSpacing:letterSpacing.wide,textTransform:'uppercase',
+          fontFamily:font.mono,cursor:'pointer',outline:'none'}}>
           CLEAR ALL
         </button>
       )}
-      <span className="en-results-count" style={{marginLeft:'auto',fontSize:11,opacity:0.4}}>
+      <span className="en-results-count" style={{marginLeft:'auto',fontSize:fontSize.smd,opacity:0.4}}>
         {!loading && `${resultCount} results`}
       </span>
     </div>
@@ -525,13 +470,13 @@ function FilterBar({ search, setSearch, filters, hasFilters, onClearAll, resultC
 
 // ─── Card grid ────────────────────────────────────────────────────────────────
 function CardGrid({ items, renderCard, loading, emptyMsg='NO RESULTS' }) {
-  if (loading) return <div style={{textAlign:'center',padding:80,fontSize:11,letterSpacing:2,opacity:0.35}}>FETCHING LIVE DATA…</div>;
-  if (!items.length) return <div style={{textAlign:'center',padding:80,fontSize:11,letterSpacing:2,opacity:0.35}}>{emptyMsg}</div>;
+  if (loading) return <div style={{textAlign:'center',padding:80,fontSize:fontSize.smd,letterSpacing:letterSpacing.wide,opacity:0.35}}>FETCHING LIVE DATA…</div>;
+  if (!items.length) return <div style={{textAlign:'center',padding:80,fontSize:fontSize.smd,letterSpacing:letterSpacing.wide,opacity:0.35}}>{emptyMsg}</div>;
   return (
     <div className="en-card-grid" style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))',
-      border:'1px solid #1a1a1a',borderBottom:'none',borderRight:'none'}}>
+      border:`1px solid ${color.ink}`,borderBottom:'none',borderRight:'none'}}>
       {items.map((item,i) => (
-        <div key={item.id||i} style={{borderBottom:'1px solid #1a1a1a',borderRight:'1px solid #1a1a1a'}}>
+        <div key={item.id||i} style={{borderBottom:`1px solid ${color.ink}`,borderRight:`1px solid ${color.ink}`}}>
           {renderCard(item)}
         </div>
       ))}
@@ -576,13 +521,13 @@ function CapitalTab({ funds, investors, loading }) {
   return (
     <div>
       {/* Sub-nav */}
-      <div className="en-subnav" style={{borderBottom:'1px solid #d4cfc7',background:'#faf6f0',display:'flex',alignItems:'center',paddingLeft:48}}>
+      <div className="en-subnav" style={{borderBottom:`1px solid ${color.border}`,background:color.cream,display:'flex',alignItems:'center',paddingLeft:48}}>
         {['funds','investors'].map(v=>(
           <button key={v} onClick={()=>{setView(v);setSelected(null);}} style={{
             padding:'10px 24px',background:'none',border:'none',
-            borderBottom:`2px solid ${view===v?'#1a1a1a':'transparent'}`,
-            cursor:'pointer',fontSize:10,letterSpacing:3,textTransform:'uppercase',
-            fontFamily:'"DM Mono",monospace',color:view===v?'#1a1a1a':'#888',outline:'none',
+            borderBottom:`2px solid ${view===v?color.ink:'transparent'}`,
+            cursor:'pointer',fontSize:fontSize.sm,letterSpacing:letterSpacing.widest,textTransform:'uppercase',
+            fontFamily:font.mono,color:view===v?color.ink:color.muted,outline:'none',
           }}>{v}</button>
         ))}
       </div>
@@ -681,18 +626,16 @@ function PulseTab({ events, dispatches, loading }) {
                  (!search || [d.title,d.body].join(' ').toLowerCase().includes(search.toLowerCase())))
     .sort((a,b) => new Date(b.date)-new Date(a.date));
 
-  const ensureHttp = s => s?(s.startsWith('http')?s:`https://${s}`):'';
-
   return (
-    <div className="en-pulse-wrap" style={{display:'flex',flexDirection:'column',height:'calc(100vh - 74px)',overflow:'hidden'}}>
+    <div className="en-pulse-wrap" style={{display:'flex',flexDirection:'column',height:`calc(100vh - ${layout.headerHeight}px)`,overflow:'hidden'}}>
       {/* Tabs */}
-      <div className="en-subnav" style={{borderBottom:'1px solid #d4cfc7',background:'#faf6f0',display:'flex',paddingLeft:48}}>
+      <div className="en-subnav" style={{borderBottom:`1px solid ${color.border}`,background:color.cream,display:'flex',paddingLeft:48}}>
         {['events','dispatches'].map(v=>(
           <button key={v} onClick={()=>{setView(v);setSearch('');setReg([]);}} style={{
             padding:'10px 24px',background:'none',border:'none',
-            borderBottom:`2px solid ${view===v?'#1a1a1a':'transparent'}`,
-            cursor:'pointer',fontSize:10,letterSpacing:3,textTransform:'uppercase',
-            fontFamily:'"DM Mono",monospace',color:view===v?'#1a1a1a':'#888',outline:'none',
+            borderBottom:`2px solid ${view===v?color.ink:'transparent'}`,
+            cursor:'pointer',fontSize:fontSize.sm,letterSpacing:letterSpacing.widest,textTransform:'uppercase',
+            fontFamily:font.mono,color:view===v?color.ink:color.muted,outline:'none',
           }}>{v}</button>
         ))}
       </div>
@@ -700,49 +643,49 @@ function PulseTab({ events, dispatches, loading }) {
       {view==='events' ? (
         <div className="en-pulse-events" style={{display:'flex',flex:1,overflow:'hidden'}}>
           {/* Left: Upcoming Events */}
-          <div className="en-pulse-left" style={{width:380,flexShrink:0,borderRight:'1px solid #d4cfc7',display:'flex',flexDirection:'column'}}>
-            <div style={{padding:'12px 20px',borderBottom:'1px solid #d4cfc7',background:'#faf6f0'}}>
+          <div className="en-pulse-left" style={{width:380,flexShrink:0,borderRight:`1px solid ${color.border}`,display:'flex',flexDirection:'column'}}>
+            <div style={{padding:'12px 20px',borderBottom:`1px solid ${color.border}`,background:color.cream}}>
               <input
                 type="text"
                 placeholder="Search events…"
                 value={search}
                 onChange={e=>setSearch(e.target.value)}
-                style={{width:'100%',padding:'8px 12px',fontSize:11,fontFamily:'"DM Mono",monospace',
-                  border:'1px solid #d4cfc7',background:'#fff',color:'#1a1a1a',outline:'none'}}
+                style={{width:'100%',padding:'8px 12px',fontSize:fontSize.smd,fontFamily:font.mono,
+                  border:`1px solid ${color.border}`,background:color.white,color:color.ink,outline:'none'}}
               />
             </div>
-            <div style={{padding:'10px 20px',borderBottom:'1px solid #d4cfc7',background:'#f0ebe3',
+            <div style={{padding:'10px 20px',borderBottom:`1px solid ${color.border}`,background:color.bgSubtle,
               display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-              <span style={{fontSize:9,letterSpacing:4,textTransform:'uppercase',color:'#888'}}>FILTER</span>
+              <span style={{fontSize:fontSize.xs,letterSpacing:letterSpacing.xwide,textTransform:'uppercase',color:color.muted}}>FILTER</span>
               <MultiSelect label="Region" options={REGIONS} selected={regionSel} onChange={setReg} />
             </div>
             <div style={{flex:1,overflowY:'auto'}}>
-              <div style={{padding:'14px 20px',fontSize:9,letterSpacing:3,textTransform:'uppercase',color:'#999',marginBottom:12}}>UPCOMING EVENTS</div>
+              <EyebrowLabel style={{padding:'14px 20px',marginBottom:12}}>UPCOMING EVENTS</EyebrowLabel>
               {loading ? (
-                <div style={{padding:40,textAlign:'center',fontSize:11,opacity:0.35,letterSpacing:2}}>LOADING…</div>
+                <div style={{padding:40,textAlign:'center',fontSize:fontSize.smd,opacity:0.35,letterSpacing:letterSpacing.wide}}>LOADING…</div>
               ) : upcoming.length===0 ? (
-                <div style={{padding:40,textAlign:'center',fontSize:11,opacity:0.35,letterSpacing:2}}>NO UPCOMING EVENTS</div>
+                <div style={{padding:40,textAlign:'center',fontSize:fontSize.smd,opacity:0.35,letterSpacing:letterSpacing.wide}}>NO UPCOMING EVENTS</div>
               ) : upcoming.map(e => {
                 const d = new Date(e.date);
                 return (
-                  <div key={e.id} style={{padding:'16px 24px',borderBottom:'1px solid #e8e3db'}}>
+                  <div key={e.id} style={{padding:'16px 24px',borderBottom:`1px solid ${color.borderSoft}`}}>
                     <div style={{display:'flex',alignItems:'flex-start',gap:14}}>
-                      <div style={{flexShrink:0,width:44,background:'#1a1a1a',color:'#faf6f0',padding:'6px 0',textAlign:'center'}}>
-                        <div style={{fontSize:18,fontFamily:'"Raleway",sans-serif',fontWeight:800,lineHeight:1}}>{d.getUTCDate()}</div>
-                        <div style={{fontSize:8,letterSpacing:2,opacity:0.6}}>
+                      <div style={{flexShrink:0,width:44,background:color.ink,color:color.cream,padding:'6px 0',textAlign:'center'}}>
+                        <div style={{fontSize:fontSize.xl,fontFamily:font.display,fontWeight:800,lineHeight:1}}>{d.getUTCDate()}</div>
+                        <div style={{fontSize:fontSize.xxs,letterSpacing:letterSpacing.wide,opacity:0.6}}>
                           {d.toLocaleString('en',{month:'short',timeZone:'UTC'}).toUpperCase()}
                         </div>
                       </div>
                       <div style={{flex:1,minWidth:0}}>
-                        <div style={{fontSize:9,letterSpacing:2,textTransform:'uppercase',
-                          color:REGION_COLORS[e.region]||'#888',marginBottom:3,fontWeight:500}}>{e.region}</div>
-                        <div style={{fontFamily:'"Raleway",sans-serif',fontSize:14,fontWeight:700,marginBottom:3,lineHeight:1.3}}>{e.name}</div>
-                        <div style={{fontSize:11,opacity:0.45,marginBottom:8}}>{e.city}</div>
-                        {e.description && <div style={{fontSize:11,lineHeight:1.6,opacity:0.6,marginBottom:8}}>{e.description}</div>}
+                        <div style={{fontSize:fontSize.xs,letterSpacing:letterSpacing.wide,textTransform:'uppercase',
+                          color:REGION_COLORS[e.region]||color.muted,marginBottom:3,fontWeight:500}}>{e.region}</div>
+                        <div style={{fontFamily:font.display,fontSize:fontSize.md,fontWeight:700,marginBottom:3,lineHeight:1.3}}>{e.name}</div>
+                        <div style={{fontSize:fontSize.smd,opacity:0.45,marginBottom:8}}>{e.city}</div>
+                        {e.description && <div style={{fontSize:fontSize.smd,lineHeight:1.6,opacity:0.6,marginBottom:8}}>{e.description}</div>}
                         {e.regUrl && (
                           <a href={ensureHttp(e.regUrl)} target="_blank" rel="noopener noreferrer"
-                            style={{fontSize:10,letterSpacing:2,textTransform:'uppercase',color:'#c8302a',
-                              textDecoration:'none',borderBottom:'1px solid #c8302a',paddingBottom:1}}>
+                            style={{fontSize:fontSize.sm,letterSpacing:letterSpacing.wide,textTransform:'uppercase',color:color.brandRed,
+                              textDecoration:'none',borderBottom:`1px solid ${color.brandRed}`,paddingBottom:1}}>
                             REGISTER ↗
                           </a>
                         )}
@@ -756,41 +699,34 @@ function PulseTab({ events, dispatches, loading }) {
 
           {/* Right: Events Grid */}
           <div className="en-pulse-right" style={{flex:1,display:'flex',flexDirection:'column',minWidth:0}}>
-            <div style={{padding:'14px 32px',borderBottom:'1px solid #d4cfc7',background:'#f0ebe3'}}>
-              <span style={{fontSize:9,letterSpacing:4,textTransform:'uppercase',color:'#888'}}>EVENTS DIRECTORY</span>
+            <div style={{padding:'14px 32px',borderBottom:`1px solid ${color.border}`,background:color.bgSubtle}}>
+              <span style={{fontSize:fontSize.xs,letterSpacing:letterSpacing.xwide,textTransform:'uppercase',color:color.muted}}>EVENTS DIRECTORY</span>
             </div>
             <div className="en-pulse-right-inner" style={{flex:1,overflowY:'auto',padding:'28px 48px'}}>
               {loading ? (
-                <div style={{padding:40,textAlign:'center',fontSize:11,opacity:0.35,letterSpacing:2}}>LOADING…</div>
+                <div style={{padding:40,textAlign:'center',fontSize:fontSize.smd,opacity:0.35,letterSpacing:letterSpacing.wide}}>LOADING…</div>
               ) : filteredEvents.length===0 ? (
-                <div style={{padding:40,textAlign:'center',fontSize:11,opacity:0.35,letterSpacing:2}}>NO EVENTS</div>
+                <div style={{padding:40,textAlign:'center',fontSize:fontSize.smd,opacity:0.35,letterSpacing:letterSpacing.wide}}>NO EVENTS</div>
               ) : (
                 <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))',gap:24}}>
                   {filteredEvents.map(e => {
                     const d = new Date(e.date);
                     return (
-                      <div key={e.id} style={{padding:'20px 22px',background:'#faf6f0',border:'1px solid #e8e3db'}}>
-                        <div style={{fontSize:9,letterSpacing:2,textTransform:'uppercase',
-                          color:REGION_COLORS[e.region]||'#888',marginBottom:8,fontWeight:500}}>{e.region}</div>
-                        <div style={{fontFamily:'"Raleway",sans-serif',fontSize:16,fontWeight:700,marginBottom:8,lineHeight:1.3}}>{e.name}</div>
-                        <div style={{fontSize:11,opacity:0.6,marginBottom:12}}>
+                      <div key={e.id} style={{padding:'20px 22px',background:color.cream,border:`1px solid ${color.borderSoft}`}}>
+                        <div style={{fontSize:fontSize.xs,letterSpacing:letterSpacing.wide,textTransform:'uppercase',
+                          color:REGION_COLORS[e.region]||color.muted,marginBottom:8,fontWeight:500}}>{e.region}</div>
+                        <div style={{fontFamily:font.display,fontSize:fontSize.lg,fontWeight:700,marginBottom:8,lineHeight:1.3}}>{e.name}</div>
+                        <div style={{fontSize:fontSize.smd,opacity:0.6,marginBottom:12}}>
                           <div>{d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',timeZone:'UTC'})}</div>
                           <div>{e.city}{e.state?`, ${e.state}`:''}</div>
                         </div>
                         {e.description && (
-                          <div style={{fontSize:11,lineHeight:1.6,opacity:0.55,marginBottom:12,
+                          <div style={{fontSize:fontSize.smd,lineHeight:1.6,opacity:0.55,marginBottom:12,
                             display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden'}}>
                             {e.description}
                           </div>
                         )}
-                        {e.regUrl && (
-                          <a href={ensureHttp(e.regUrl)} target="_blank" rel="noopener noreferrer"
-                            style={{display:'inline-flex',alignItems:'center',gap:8,padding:'8px 14px',
-                              background:'#1a1a1a',color:'#faf6f0',fontSize:9,letterSpacing:1.5,
-                              textTransform:'uppercase',textDecoration:'none',width:'fit-content'}}>
-                            REGISTER ↗
-                          </a>
-                        )}
+                        {e.regUrl && <LinkButton href={ensureHttp(e.regUrl)} variant="solid">REGISTER ↗</LinkButton>}
                       </div>
                     );
                   })}
@@ -803,43 +739,43 @@ function PulseTab({ events, dispatches, loading }) {
         <div style={{display:'flex',flex:1,overflow:'hidden'}}>
           {/* Dispatches */}
           <div style={{flex:1,display:'flex',flexDirection:'column',minWidth:0}}>
-            <div style={{padding:'12px 20px',borderBottom:'1px solid #d4cfc7',background:'#faf6f0'}}>
+            <div style={{padding:'12px 20px',borderBottom:`1px solid ${color.border}`,background:color.cream}}>
               <input
                 type="text"
                 placeholder="Search dispatches…"
                 value={search}
                 onChange={e=>setSearch(e.target.value)}
-                style={{width:'100%',padding:'8px 12px',fontSize:11,fontFamily:'"DM Mono",monospace',
-                  border:'1px solid #d4cfc7',background:'#fff',color:'#1a1a1a',outline:'none'}}
+                style={{width:'100%',padding:'8px 12px',fontSize:fontSize.smd,fontFamily:font.mono,
+                  border:`1px solid ${color.border}`,background:color.white,color:color.ink,outline:'none'}}
               />
             </div>
-            <div style={{padding:'10px 20px',borderBottom:'1px solid #d4cfc7',background:'#f0ebe3',
+            <div style={{padding:'10px 20px',borderBottom:`1px solid ${color.border}`,background:color.bgSubtle,
               display:'flex',alignItems:'center',justifyContent:'flex-end'}}>
               <MultiSelect label="Region" options={REGIONS} selected={regionSel} onChange={setReg} />
             </div>
             <div style={{flex:1,overflowY:'auto',padding:'0 32px'}}>
               {loading ? (
-                <div style={{padding:40,textAlign:'center',fontSize:11,opacity:0.35,letterSpacing:2}}>LOADING…</div>
+                <div style={{padding:40,textAlign:'center',fontSize:fontSize.smd,opacity:0.35,letterSpacing:letterSpacing.wide}}>LOADING…</div>
               ) : filteredDisp.length===0 ? (
-                <div style={{padding:40,textAlign:'center',fontSize:11,opacity:0.35,letterSpacing:2}}>NO DISPATCHES</div>
+                <div style={{padding:40,textAlign:'center',fontSize:fontSize.smd,opacity:0.35,letterSpacing:letterSpacing.wide}}>NO DISPATCHES</div>
               ) : filteredDisp.map(d => {
                 const isExp = expandedId===d.id;
                 return (
-                  <div key={d.id} style={{borderBottom:'1px solid #e8e3db',padding:'24px 0'}}>
+                  <div key={d.id} style={{borderBottom:`1px solid ${color.borderSoft}`,padding:'24px 0'}}>
                     <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:8}}>
-                      <span style={{fontSize:9,letterSpacing:2,textTransform:'uppercase',
-                        color:REGION_COLORS[d.region]||'#888',fontWeight:500}}>{d.region}</span>
-                      {d.date && <span style={{fontSize:9,opacity:0.35}}>
+                      <span style={{fontSize:fontSize.xs,letterSpacing:letterSpacing.wide,textTransform:'uppercase',
+                        color:REGION_COLORS[d.region]||color.muted,fontWeight:500}}>{d.region}</span>
+                      {d.date && <span style={{fontSize:fontSize.xs,opacity:0.35}}>
                         {new Date(d.date).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric',timeZone:'UTC'})}
                       </span>}
                     </div>
                     <h3 onClick={()=>setExpanded(isExp?null:d.id)}
-                      style={{fontFamily:'"Raleway",sans-serif',fontSize:20,fontWeight:800,
+                      style={{fontFamily:font.display,fontSize:fontSize.xxl,fontWeight:800,
                         margin:'0 0 12px',lineHeight:1.2,cursor:'pointer'}}>
                       {d.title}
                     </h3>
                     {d.body && (
-                      <div style={{fontSize:13.5,lineHeight:1.8,color:'#333',
+                      <div style={{fontSize:fontSize.basemdPlus,lineHeight:1.8,color:color.dispatchBody,
                         display:isExp?'block':'-webkit-box',
                         WebkitLineClamp:isExp?undefined:4,
                         WebkitBoxOrient:isExp?undefined:'vertical',
@@ -849,7 +785,7 @@ function PulseTab({ events, dispatches, loading }) {
                     )}
                     <button onClick={()=>setExpanded(isExp?null:d.id)}
                       style={{marginTop:12,background:'none',border:'none',padding:0,cursor:'pointer',
-                        fontSize:10,letterSpacing:2,textTransform:'uppercase',color:'#888',outline:'none'}}>
+                        fontSize:fontSize.sm,letterSpacing:letterSpacing.wide,textTransform:'uppercase',color:color.muted,outline:'none'}}>
                       {isExp?'COLLAPSE ↑':'READ MORE →'}
                     </button>
                   </div>
@@ -1131,13 +1067,13 @@ export default function App() {
   ];
 
   return (
-    <div style={{minHeight:'100vh',background:'#faf6f0',fontFamily:'"DM Mono",monospace',color:'#1a1a1a'}}>
+    <div style={{minHeight:'100vh',background:color.cream,fontFamily:font.mono,color:color.ink}}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Raleway:wght@600;700;800&display=swap');
         * { box-sizing:border-box; }
         ::-webkit-scrollbar { width:3px; }
-        ::-webkit-scrollbar-track { background:#faf6f0; }
-        ::-webkit-scrollbar-thumb { background:#1a1a1a; }
+        ::-webkit-scrollbar-track { background:${color.cream}; }
+        ::-webkit-scrollbar-thumb { background:${color.ink}; }
         input::placeholder { opacity:0.38; }
         button:focus { outline:none; }
         button:active { -webkit-tap-highlight-color: transparent; }
@@ -1166,8 +1102,8 @@ export default function App() {
           .en-header-stats   { display: none !important; }
           .en-header-nav     { display: none !important; }
           .en-header-nav.open{ display: flex !important; flex-direction: column !important; width: 100% !important;
-                               order: 3; border-top: 1px solid #1a1a1a; }
-          .en-header-nav.open button { border-left: none !important; border-bottom: 1px solid #eee !important;
+                               order: 3; border-top: 1px solid ${color.ink}; }
+          .en-header-nav.open button { border-left: none !important; border-bottom: 1px solid ${color.borderFaint} !important;
                                        padding: 14px 20px !important; font-size: 11px !important;
                                        justify-content: flex-start !important; height: auto !important; }
           .en-hamburger      { display: flex !important; }
@@ -1194,7 +1130,7 @@ export default function App() {
 
           /* Pulse events: stack left + right panels */
           .en-pulse-events   { flex-direction: column !important; overflow: visible !important; height: auto !important; }
-          .en-pulse-left     { width: 100% !important; max-height: 320px !important; border-right: none !important; border-bottom: 1px solid #d4cfc7 !important; flex-shrink: 0 !important; }
+          .en-pulse-left     { width: 100% !important; max-height: 320px !important; border-right: none !important; border-bottom: 1px solid ${color.border} !important; flex-shrink: 0 !important; }
           .en-pulse-right    { min-height: 300px !important; }
           .en-pulse-right-inner { padding: 16px 14px !important; }
 
@@ -1202,7 +1138,7 @@ export default function App() {
           .en-map-wrap       { flex-direction: column !important; height: auto !important; overflow: visible !important; }
           .en-map-col        { overflow: visible !important; padding: 12px 14px 8px !important; }
           .en-map-svg-wrap   { height: 52vw !important; min-height: 200px !important; }
-          .en-map-side       { width: 100% !important; border-left: none !important; border-top: 2px solid #1a1a1a !important; max-height: 300px !important; }
+          .en-map-side       { width: 100% !important; border-left: none !important; border-top: 2px solid ${color.ink} !important; max-height: 300px !important; }
           .en-map-legend     { gap: 8px !important; flex-wrap: wrap !important; }
           .en-map-legend > div { font-size: 9px !important; }
 
@@ -1217,17 +1153,17 @@ export default function App() {
       `}</style>
 
       {/* ── Header ── */}
-      <header className="en-header" style={{borderBottom:'2px solid #1a1a1a',background:'#faf6f0',
-        display:'flex',alignItems:'stretch',height:74}}>
+      <header className="en-header" style={{borderBottom:`2px solid ${color.ink}`,background:color.cream,
+        display:'flex',alignItems:'stretch',height:layout.headerHeight}}>
 
         {/* Logo */}
         <div className="en-header-logo" onClick={()=>{setTab('capital');setNavOpen(false);}}
           style={{padding:'0 40px',display:'flex',flexDirection:'column',justifyContent:'center',
-            borderRight:'1px solid #1a1a1a',minWidth:260,cursor:'pointer',userSelect:'none'}}>
-          <div className="en-tagline" style={{fontSize:13,letterSpacing:4,textTransform:'uppercase',color:'#c8302a',marginBottom:5,fontWeight:600}}>
+            borderRight:`1px solid ${color.ink}`,minWidth:260,cursor:'pointer',userSelect:'none'}}>
+          <div className="en-tagline" style={{fontSize:fontSize.basemd,letterSpacing:letterSpacing.xwide,textTransform:'uppercase',color:color.brandRed,marginBottom:5,fontWeight:600}}>
             EMERGING NETWORKS ///
           </div>
-          <h1 style={{margin:0,fontSize:22,fontFamily:'"Raleway",sans-serif',fontWeight:800,letterSpacing:-0.5,lineHeight:1}}>
+          <h1 style={{margin:0,fontSize:fontSize.display1,fontFamily:font.display,fontWeight:800,letterSpacing:-0.5,lineHeight:1}}>
             US Capital Directory
           </h1>
         </div>
@@ -1235,26 +1171,26 @@ export default function App() {
         {/* Hamburger — hidden on desktop via CSS, visible on mobile */}
         <button className="en-hamburger" onClick={()=>setNavOpen(o=>!o)}
           style={{display:'none',alignItems:'center',justifyContent:'center',
-            padding:'0 18px',background:'none',border:'none',borderLeft:'1px solid #1a1a1a',
-            cursor:'pointer',fontSize:20,color:'#1a1a1a',outline:'none',flexShrink:0}}>
+            padding:'0 18px',background:'none',border:'none',borderLeft:`1px solid ${color.ink}`,
+            cursor:'pointer',fontSize:fontSize.xxl,color:color.ink,outline:'none',flexShrink:0}}>
           {navOpen ? '×' : '≡'}
         </button>
 
         {/* Stats ticker */}
-        <div className="en-header-stats" style={{flex:1,padding:'0 32px',display:'flex',alignItems:'center',gap:32,borderRight:'1px solid #1a1a1a'}}>
+        <div className="en-header-stats" style={{flex:1,padding:'0 32px',display:'flex',alignItems:'center',gap:32,borderRight:`1px solid ${color.ink}`}}>
           <div>
-            <div style={{fontSize:10,letterSpacing:2,color:'#1a1a1a',marginBottom:3,fontWeight:600}}>STATUS</div>
-            <div style={{fontSize:11,display:'flex',alignItems:'center',gap:7}}>
+            <div style={{fontSize:fontSize.sm,letterSpacing:letterSpacing.wide,color:color.ink,marginBottom:3,fontWeight:600}}>STATUS</div>
+            <div style={{fontSize:fontSize.smd,display:'flex',alignItems:'center',gap:7}}>
               <span style={{width:7,height:7,borderRadius:'50%',flexShrink:0,
-                background:loading?'#f59e0b':'#22c55e',
-                boxShadow:loading?'none':'0 0 6px #22c55e'}} />
+                background:loading?color.statusLoading:color.statusLive,
+                boxShadow:loading?'none':`0 0 6px ${color.statusLive}`}} />
               {loading?'Fetching…':'Live'}
             </div>
           </div>
           {!loading && stats.map(([l,v])=>(
             <div key={l}>
-              <div style={{fontSize:10,letterSpacing:2,color:'#1a1a1a',marginBottom:3,fontWeight:600}}>{l}</div>
-              <div style={{fontSize:18,fontFamily:'"DM Mono",monospace',fontWeight:500,lineHeight:1,letterSpacing:-0.5,textAlign:'center'}}>{v}</div>
+              <div style={{fontSize:fontSize.sm,letterSpacing:letterSpacing.wide,color:color.ink,marginBottom:3,fontWeight:600}}>{l}</div>
+              <div style={{fontSize:fontSize.xl,fontFamily:font.mono,fontWeight:500,lineHeight:1,letterSpacing:-0.5,textAlign:'center'}}>{v}</div>
             </div>
           ))}
         </div>
@@ -1264,11 +1200,11 @@ export default function App() {
           {[['capital','CAPITAL'],['partners','PARTNERS'],['pulse','PULSE'],['map','MAP']].map(([t,l])=>(
             <button key={t} onClick={()=>{setTab(t);setNavOpen(false);}} style={{
               padding:'0 26px',
-              background:tab===t?'#1a1a1a':'transparent',
-              color:tab===t?'#faf6f0':'#1a1a1a',
-              border:'none',borderLeft:'1px solid #1a1a1a',
-              cursor:'pointer',fontSize:10,letterSpacing:3,
-              fontFamily:'"DM Mono",monospace',transition:'all 0.12s',fontWeight:500,outline:'none',
+              background:tab===t?color.ink:'transparent',
+              color:tab===t?color.cream:color.ink,
+              border:'none',borderLeft:`1px solid ${color.ink}`,
+              cursor:'pointer',fontSize:fontSize.sm,letterSpacing:letterSpacing.widest,
+              fontFamily:font.mono,transition:'all 0.12s',fontWeight:500,outline:'none',
             }}>{l}</button>
           ))}
         </nav>
@@ -1280,28 +1216,28 @@ export default function App() {
       {tab==='map'      && <MapTab      funds={funds} mapPaths={mapPaths} />}
 
       {/* ── Footer ── */}
-      <footer style={{borderTop:'2px solid #1a1a1a',background:'#1a1a1a',color:'#faf6f0',fontFamily:'"DM Mono",monospace'}}>
+      <footer style={{borderTop:`2px solid ${color.ink}`,background:color.ink,color:color.cream,fontFamily:font.mono}}>
         {/* About strip */}
         <div className="en-footer-grid" style={{borderBottom:'1px solid rgba(255,255,255,0.1)',padding:'48px 64px',
           display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:48}}>
 
           {/* Mission */}
           <div>
-            <div style={{fontSize:8,letterSpacing:5,textTransform:'uppercase',color:'#c8302a',marginBottom:12,fontWeight:600}}>
+            <div style={{fontSize:fontSize.xxs,letterSpacing:letterSpacing.xxwide,textTransform:'uppercase',color:color.brandRed,marginBottom:12,fontWeight:600}}>
               EMERGING NETWORKS ///
             </div>
-            <h2 style={{fontFamily:'"Raleway",sans-serif',fontSize:22,fontWeight:800,
+            <h2 style={{fontFamily:font.display,fontSize:fontSize.display1,fontWeight:800,
               margin:'0 0 16px',lineHeight:1.15,letterSpacing:-0.5}}>
               The network for vetted, quality, niche capital.
             </h2>
-            <p style={{fontSize:12,lineHeight:1.85,opacity:0.55,margin:0}}>
+            <p style={{fontSize:fontSize.base,lineHeight:1.85,opacity:0.55,margin:0}}>
               Emerging Networks is a curated intelligence layer for startup ecosystems across the US. We track the funds, investors, and ecosystem partners building the next generation of companies in emerging markets: Gulf South, Southeast, South West, Mid-West, Mid-Atlantic, North East, and North West.
             </p>
           </div>
 
           {/* What we are */}
           <div>
-            <div style={{fontSize:11,letterSpacing:3,textTransform:'uppercase',color:'#888',marginBottom:16}}>WHAT WE ARE</div>
+            <div style={{fontSize:fontSize.smd,letterSpacing:letterSpacing.widest,textTransform:'uppercase',color:color.muted,marginBottom:16}}>WHAT WE ARE</div>
             <div style={{display:'flex',flexDirection:'column',gap:14}}>
               {[
                 ['CAPITAL','A curated directory of venture funds, accelerators, family offices, and economic development organizations across emerging US markets.'],
@@ -1310,8 +1246,8 @@ export default function App() {
                 ['PULSE','Upcoming events and editorial dispatches on what\'s happening across the regions we cover.'],
               ].map(([label,desc])=>(
                 <div key={label}>
-                  <div style={{fontSize:9,letterSpacing:2,fontWeight:600,color:'#c8302a',marginBottom:4}}>{label}</div>
-                  <div style={{fontSize:11,lineHeight:1.7,opacity:0.5}}>{desc}</div>
+                  <div style={{fontSize:fontSize.xs,letterSpacing:letterSpacing.wide,fontWeight:600,color:color.brandRed,marginBottom:4}}>{label}</div>
+                  <div style={{fontSize:fontSize.smd,lineHeight:1.7,opacity:0.5}}>{desc}</div>
                 </div>
               ))}
             </div>
@@ -1319,12 +1255,12 @@ export default function App() {
 
           {/* Quick links + stats */}
           <div>
-            <div style={{fontSize:11,letterSpacing:3,textTransform:'uppercase',color:'#888',marginBottom:16}}>NAVIGATE</div>
+            <div style={{fontSize:fontSize.smd,letterSpacing:letterSpacing.widest,textTransform:'uppercase',color:color.muted,marginBottom:16}}>NAVIGATE</div>
             <div style={{display:'flex',flexDirection:'column',gap:8,marginBottom:32}}>
               {[['CAPITAL',()=>setTab('capital')],['PARTNERS',()=>setTab('partners')],['PULSE',()=>setTab('pulse')],['MAP',()=>setTab('map')]].map(([l,fn])=>(
                 <button key={l} onClick={fn} style={{background:'none',border:'none',padding:0,
-                  cursor:'pointer',fontSize:11,letterSpacing:2,textTransform:'uppercase',
-                  color:'#faf6f0',opacity:0.6,textAlign:'left',fontFamily:'"DM Mono",monospace',
+                  cursor:'pointer',fontSize:fontSize.smd,letterSpacing:letterSpacing.wide,textTransform:'uppercase',
+                  color:color.cream,opacity:0.6,textAlign:'left',fontFamily:font.mono,
                   outline:'none'}}
                   onMouseEnter={e=>e.currentTarget.style.opacity='1'}
                   onMouseLeave={e=>e.currentTarget.style.opacity='0.6'}>
@@ -1336,8 +1272,8 @@ export default function App() {
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
                 {[['FUNDS',funds.length],['INVESTORS',investors.length],['PARTNERS',partners.length],['REGIONS',[...new Set(funds.map(f=>f.region).filter(Boolean))].length]].map(([l,v])=>(
                   <div key={l}>
-                    <div style={{fontSize:8,letterSpacing:2,color:'#666',marginBottom:3}}>{l}</div>
-                    <div style={{fontSize:24,fontFamily:'"Raleway",sans-serif',fontWeight:800,lineHeight:1}}>{v}</div>
+                    <div style={{fontSize:fontSize.xxs,letterSpacing:letterSpacing.wide,color:color.mutedFooterStat,marginBottom:3}}>{l}</div>
+                    <div style={{fontSize:fontSize.display3,fontFamily:font.display,fontWeight:800,lineHeight:1}}>{v}</div>
                   </div>
                 ))}
               </div>
@@ -1347,32 +1283,32 @@ export default function App() {
 
         {/* Bottom bar with contact */}
         <div className="en-footer-bottom" style={{padding:'16px 64px',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:16}}>
-          <div style={{fontSize:10,opacity:0.3}}>
+          <div style={{fontSize:fontSize.sm,opacity:0.3}}>
             © {new Date().getFullYear()} Emerging Networks. Curated, not scraped.
           </div>
           <button onClick={()=>setShowContact(true)} style={{
-            background:'#c8302a',color:'#faf6f0',border:'none',padding:'8px 16px',
-            fontSize:9,letterSpacing:2,textTransform:'uppercase',cursor:'pointer',
-            fontFamily:'"DM Mono",monospace',outline:'none'
+            background:color.brandRed,color:color.cream,border:'none',padding:'8px 16px',
+            fontSize:fontSize.xs,letterSpacing:letterSpacing.wide,textTransform:'uppercase',cursor:'pointer',
+            fontFamily:font.mono,outline:'none'
           }}>
             GET LISTED ↗
           </button>
-          <div style={{fontSize:10,opacity:0.3,letterSpacing:1}}>
+          <div style={{fontSize:fontSize.sm,opacity:0.3,letterSpacing:letterSpacing.snug}}>
             emerging.network
           </div>
         </div>
       </footer>
-      
+
       {/* Contact Modal */}
       {showContact && (
         <div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'rgba(0,0,0,0.6)',
           display:'flex',alignItems:'center',justifyContent:'center',zIndex:1000}}>
-          <div className="en-modal-inner" style={{background:'#faf6f0',padding:'40px',borderRadius:0,maxWidth:500,width:'90%',maxHeight:'90vh',overflowY:'auto'}}>
+          <div className="en-modal-inner" style={{background:color.cream,padding:'40px',borderRadius:radius.none,maxWidth:500,width:'90%',maxHeight:'90vh',overflowY:'auto'}}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:24}}>
-              <h2 style={{margin:0,fontFamily:'"Raleway",sans-serif',fontSize:22,fontWeight:800}}>Get Listed</h2>
-              <button onClick={()=>setShowContact(false)} style={{background:'none',border:'none',fontSize:28,cursor:'pointer',color:'#1a1a1a',padding:0,outline:'none'}}>×</button>
+              <h2 style={{margin:0,fontFamily:font.display,fontSize:fontSize.display1,fontWeight:800}}>Get Listed</h2>
+              <CloseButton onClick={()=>setShowContact(false)} />
             </div>
-            <p style={{fontSize:12,lineHeight:1.6,marginBottom:24,opacity:0.6}}>
+            <p style={{fontSize:fontSize.base,lineHeight:1.6,marginBottom:24,opacity:0.6}}>
               Are you a fund, investor, partner, or event organizer in the emerging capital space? Submit your information below and we'll review it for inclusion in our curated directory.
             </p>
             <form onSubmit={async (e)=>{
@@ -1400,9 +1336,9 @@ export default function App() {
                 alert('Error submitting form. Please try again.');
               }
             }} style={{display:'flex',flexDirection:'column',gap:16}}>
-              <input type="text" name="name" placeholder="Name" required style={{padding:'10px 12px',border:'1px solid #d4cfc7',fontFamily:'"DM Mono",monospace',fontSize:11,outline:'none'}} />
-              <input type="email" name="email" placeholder="Email" required style={{padding:'10px 12px',border:'1px solid #d4cfc7',fontFamily:'"DM Mono",monospace',fontSize:11,outline:'none'}} />
-              <select name="type" required style={{padding:'10px 12px',border:'1px solid #d4cfc7',fontFamily:'"DM Mono",monospace',fontSize:11,outline:'none',background:'#fff'}}>
+              <input type="text" name="name" placeholder="Name" required style={{padding:'10px 12px',border:`1px solid ${color.border}`,fontFamily:font.mono,fontSize:fontSize.smd,outline:'none'}} />
+              <input type="email" name="email" placeholder="Email" required style={{padding:'10px 12px',border:`1px solid ${color.border}`,fontFamily:font.mono,fontSize:fontSize.smd,outline:'none'}} />
+              <select name="type" required style={{padding:'10px 12px',border:`1px solid ${color.border}`,fontFamily:font.mono,fontSize:fontSize.smd,outline:'none',background:color.white}}>
                 <option value="">Select type…</option>
                 <option value="Fund">Fund</option>
                 <option value="Investor">Investor</option>
@@ -1410,13 +1346,13 @@ export default function App() {
                 <option value="Event">Event</option>
                 <option value="Other">Other</option>
               </select>
-              <input type="text" name="organization" placeholder="Organization/Fund Name" required style={{padding:'10px 12px',border:'1px solid #d4cfc7',fontFamily:'"DM Mono",monospace',fontSize:11,outline:'none'}} />
-              <select name="region" required style={{padding:'10px 12px',border:'1px solid #d4cfc7',fontFamily:'"DM Mono",monospace',fontSize:11,outline:'none',background:'#fff'}}>
+              <input type="text" name="organization" placeholder="Organization/Fund Name" required style={{padding:'10px 12px',border:`1px solid ${color.border}`,fontFamily:font.mono,fontSize:fontSize.smd,outline:'none'}} />
+              <select name="region" required style={{padding:'10px 12px',border:`1px solid ${color.border}`,fontFamily:font.mono,fontSize:fontSize.smd,outline:'none',background:color.white}}>
                 <option value="">Select region…</option>
                 {REGIONS.map(r=><option key={r} value={r}>{r}</option>)}
               </select>
-              <textarea name="message" placeholder="Tell us about yourself…" style={{padding:'10px 12px',border:'1px solid #d4cfc7',fontFamily:'"DM Mono",monospace',fontSize:11,outline:'none',minHeight:100,resize:'none'}} />
-              <button type="submit" style={{background:'#1a1a1a',color:'#faf6f0',border:'none',padding:'10px',fontFamily:'"DM Mono",monospace',fontSize:10,letterSpacing:2,textTransform:'uppercase',cursor:'pointer',outline:'none'}}>
+              <textarea name="message" placeholder="Tell us about yourself…" style={{padding:'10px 12px',border:`1px solid ${color.border}`,fontFamily:font.mono,fontSize:fontSize.smd,outline:'none',minHeight:100,resize:'none'}} />
+              <button type="submit" style={{background:color.ink,color:color.cream,border:'none',padding:'10px',fontFamily:font.mono,fontSize:fontSize.sm,letterSpacing:letterSpacing.wide,textTransform:'uppercase',cursor:'pointer',outline:'none'}}>
                 SUBMIT
               </button>
             </form>
