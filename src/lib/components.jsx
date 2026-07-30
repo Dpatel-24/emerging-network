@@ -1,5 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { color, font, fontSize, letterSpacing, spacing } from './tokens.js';
+
+// Resets native button chrome so a <button> can be styled identically to the
+// clickable <div> patterns it replaces, while staying keyboard-operable
+// (focusable, Enter/Space activate it, shows up in the tab order).
+export const buttonReset = {
+  font: 'inherit', textAlign: 'left', width: '100%', display: 'block',
+};
 
 // ─── Shared UI primitives ───────────────────────────────────────────────────
 // Each of these replaces a pattern the audit found copy-pasted 2+ times
@@ -25,13 +32,23 @@ export function EyebrowLabel({ children, marginBottom = spacing[8], style = {} }
 
 // Replaces the identical "×" close button duplicated 3x in the audit
 // (App.jsx:223,307,382).
-export function CloseButton({ onClick }) {
+export function CloseButton({ onClick, label = 'Close' }) {
   return (
-    <button onClick={onClick} style={{
+    <button type="button" onClick={onClick} aria-label={label} style={{
       background: 'none', border: 'none', cursor: 'pointer',
-      fontSize: 22, lineHeight: 1, color: color.ink, padding: 0, outline: 'none',
+      fontSize: 22, lineHeight: 1, color: color.ink, padding: 0,
     }}>×</button>
   );
+}
+
+// Closes an open panel/modal on Escape. Used by SlidePanel and the contact
+// modal so keyboard users aren't trapped once one is open.
+export function useEscapeToClose(onClose) {
+  useEffect(() => {
+    const h = e => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', h);
+    return () => document.removeEventListener('keydown', h);
+  }, [onClose]);
 }
 
 // Replaces the 8 near-identical action-link `<a>` tags duplicated across
@@ -68,9 +85,13 @@ export function ensureHttp(s) {
 // across FundCard/InvestorCard/PartnerCard (App.jsx:412,441,474).
 export function useHoverCard() {
   const [hov, setHov] = useState(false);
-  const hoverProps = { onMouseEnter: () => setHov(true), onMouseLeave: () => setHov(false) };
+  const hoverProps = {
+    onMouseEnter: () => setHov(true), onMouseLeave: () => setHov(false),
+    onFocus: () => setHov(true), onBlur: () => setHov(false),
+  };
   const cardStyle = {
-    padding: '20px 22px', cursor: 'pointer',
+    ...buttonReset,
+    padding: '20px 22px', cursor: 'pointer', border: 'none',
     background: hov ? color.ink : color.cream,
     color: hov ? color.cream : color.ink,
     transition: 'all 0.12s', height: '100%',
@@ -107,6 +128,42 @@ export function PanelHeader({ label, color: labelColor = color.muted, onClose })
         textTransform: 'uppercase', color: labelColor, fontWeight: 500,
       }}>{label}</span>
       <CloseButton onClick={onClose} />
+    </div>
+  );
+}
+
+// Placeholder shown in a Partners category with zero real entries. Same
+// padding/height as PartnerCard so the grid doesn't visually break when a
+// category is empty, but styled as an open slot rather than a filled one:
+// dashed border, muted ink instead of the category accent color, no hover
+// invert (nothing to click through to).
+export function OpenSeatCard({ category, onRequestReferral }) {
+  return (
+    <div style={{
+      padding: '20px 22px', height: '100%',
+      border: `1px dashed ${color.muted}`, background: 'transparent',
+      display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+    }}>
+      <div>
+        <div style={{
+          fontSize: fontSize.sm, letterSpacing: letterSpacing.wide, textTransform: 'uppercase',
+          color: color.muted, fontWeight: 500, marginBottom: 9,
+        }}>{category}</div>
+        <div style={{ fontFamily: font.display, fontSize: fontSize.lg, fontWeight: 700, marginBottom: 8, color: color.muted }}>
+          Open seat
+        </div>
+        <div style={{ fontSize: fontSize.base, lineHeight: 1.65, opacity: 0.65 }}>
+          We haven't vetted a {category.toLowerCase()} partner yet. Know someone good?
+        </div>
+      </div>
+      <button type="button" onClick={onRequestReferral} style={{
+        ...buttonReset, width: 'fit-content', marginTop: 14,
+        background: 'none', border: `1px solid ${color.muted}`, color: color.muted,
+        padding: '8px 14px', fontSize: fontSize.sm, letterSpacing: letterSpacing.wide,
+        textTransform: 'uppercase', cursor: 'pointer',
+      }}>
+        Refer a partner
+      </button>
     </div>
   );
 }

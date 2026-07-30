@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { color, font, fontSize, letterSpacing, spacing, layout, radius, regionColors, typeColors, partnerColors } from './lib/tokens.js';
-import { EyebrowLabel, CloseButton, LinkButton, ensureHttp, useHoverCard, KeyValueGrid, PanelHeader } from './lib/components.jsx';
+import { EyebrowLabel, CloseButton, LinkButton, ensureHttp, useHoverCard, KeyValueGrid, PanelHeader, useEscapeToClose, buttonReset, OpenSeatCard } from './lib/components.jsx';
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
@@ -117,11 +117,12 @@ function MultiSelect({ label, options, selected, onChange }) {
   const lbl = count===0?label:count===1?selected[0]:`${label} (${count})`;
   return (
     <div ref={ref} style={{position:'relative',display:'inline-block'}}>
-      <button onMouseDown={e=>{e.preventDefault();setOpen(o=>!o)}} style={{
+      <button type="button" onMouseDown={e=>{e.preventDefault();setOpen(o=>!o)}}
+        aria-haspopup="listbox" aria-expanded={open} aria-label={`Filter by ${label}`} style={{
         background:active?color.ink:'transparent',color:active?color.cream:color.ink,
         border:`1px solid ${color.ink}`,padding:'7px 11px',
         fontSize:fontSize.smd,fontFamily:font.mono,cursor:'pointer',
-        minWidth:118,outline:'none',WebkitAppearance:'none',appearance:'none',
+        minWidth:118,WebkitAppearance:'none',appearance:'none',
         userSelect:'none',WebkitUserSelect:'none',MozUserSelect:'none',
         display:'flex',alignItems:'center',justifyContent:'space-between',gap:6,
       }}>
@@ -129,34 +130,36 @@ function MultiSelect({ label, options, selected, onChange }) {
         <span style={{fontSize:fontSize.xs,flexShrink:0,lineHeight:1}}>▾</span>
       </button>
       {open && (
-        <div style={{position:'absolute',top:'100%',left:0,zIndex:300,
+        <div role="listbox" aria-label={label} style={{position:'absolute',top:'100%',left:0,zIndex:300,
           background:color.cream,border:`1px solid ${color.ink}`,borderTop:'none',
           minWidth:200,maxHeight:280,overflowY:'auto',
           boxShadow:'0 4px 20px rgba(0,0,0,0.12)'}}>
           {count>0 && (
-            <div onMouseDown={e=>{e.preventDefault();onChange([]);setOpen(false)}}
-              style={{padding:'8px 12px',fontSize:fontSize.sm,letterSpacing:letterSpacing.wide,color:color.brandRed,
+            <button type="button" onMouseDown={e=>{e.preventDefault();onChange([]);setOpen(false)}}
+              style={{...buttonReset,padding:'8px 12px',fontSize:fontSize.sm,letterSpacing:letterSpacing.wide,color:color.brandRed,
+                background:'transparent',border:'none',
                 cursor:'pointer',borderBottom:`1px solid ${color.borderSoft}`,textTransform:'uppercase'}}
               onMouseEnter={e=>e.currentTarget.style.background=color.bgFaint}
               onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
               CLEAR SELECTION
-            </div>
+            </button>
           )}
           {options.map(opt=>{
             const sel=selected.includes(opt);
             return (
-              <div key={opt} onMouseDown={e=>{e.preventDefault();toggle(opt)}}
-                style={{padding:'8px 12px',fontSize:fontSize.smd,fontFamily:font.mono,
-                  cursor:'pointer',display:'flex',alignItems:'center',gap:8,
+              <button type="button" key={opt} onMouseDown={e=>{e.preventDefault();toggle(opt)}}
+                role="option" aria-selected={sel}
+                style={{...buttonReset,padding:'8px 12px',fontSize:fontSize.smd,fontFamily:font.mono,
+                  cursor:'pointer',display:'flex',alignItems:'center',gap:8,border:'none',
                   background:sel?color.ink:'transparent',color:sel?color.cream:color.ink,userSelect:'none'}}
                 onMouseEnter={e=>{if(!sel)e.currentTarget.style.background=color.bgSubtle}}
                 onMouseLeave={e=>{if(!sel)e.currentTarget.style.background='transparent'}}>
-                <span style={{width:12,height:12,flexShrink:0,display:'inline-flex',alignItems:'center',
+                <span aria-hidden="true" style={{width:12,height:12,flexShrink:0,display:'inline-flex',alignItems:'center',
                   justifyContent:'center',fontSize:fontSize.xs,border:`1px solid ${sel?color.cream:color.ink}`}}>
                   {sel?'✓':''}
                 </span>
                 {opt}
-              </div>
+              </button>
             );
           })}
         </div>
@@ -167,10 +170,11 @@ function MultiSelect({ label, options, selected, onChange }) {
 
 // ─── Shared slide panel shell ─────────────────────────────────────────────────
 function SlidePanel({ onClose, children }) {
+  useEscapeToClose(onClose);
   return (
     <>
-      <div onClick={onClose} style={{position:'fixed',inset:0,zIndex:99,background:'rgba(0,0,0,0.32)'}} />
-      <div className="en-slide-panel" style={{position:'fixed',top:0,right:0,width:layout.panelWidth,height:'100vh',
+      <div onClick={onClose} aria-hidden="true" style={{position:'fixed',inset:0,zIndex:99,background:'rgba(0,0,0,0.32)'}} />
+      <div className="en-slide-panel" role="dialog" aria-modal="true" style={{position:'fixed',top:0,right:0,width:layout.panelWidth,height:'100vh',
         background:color.cream,borderLeft:`2px solid ${color.ink}`,zIndex:100,
         display:'flex',flexDirection:'column',fontFamily:font.mono,
         boxShadow:'-8px 0 40px rgba(0,0,0,0.15)'}}>
@@ -221,8 +225,9 @@ function FundPanel({ fund, onClose, investors=[], onSelectInvestor }) {
           <div style={{marginBottom:20}}>
             <EyebrowLabel marginBottom={10}>INVESTORS ON FILE</EyebrowLabel>
             {linkedInvestors.map(inv=>(
-              <div key={inv.id} onClick={()=>onSelectInvestor&&onSelectInvestor(inv)}
-                style={{display:'flex',alignItems:'center',gap:12,padding:'10px 12px',
+              <button type="button" key={inv.id} onClick={()=>onSelectInvestor&&onSelectInvestor(inv)}
+                aria-label={`View investor ${inv.name}`}
+                style={{...buttonReset,display:'flex',alignItems:'center',gap:12,padding:'10px 12px',
                   marginBottom:6,border:`1px solid ${color.borderSoft}`,cursor:'pointer',background:color.cream}}
                 onMouseEnter={e=>e.currentTarget.style.background=color.bgSubtle}
                 onMouseLeave={e=>e.currentTarget.style.background=color.cream}>
@@ -234,8 +239,8 @@ function FundPanel({ fund, onClose, investors=[], onSelectInvestor }) {
                   <div style={{fontSize:fontSize.basemd,fontWeight:600,fontFamily:font.display}}>{inv.name}</div>
                   <div style={{fontSize:fontSize.sm,opacity:0.5}}>{inv.title}</div>
                 </div>
-                <span style={{fontSize:fontSize.sm,opacity:0.35}}>→</span>
-              </div>
+                <span aria-hidden="true" style={{fontSize:fontSize.sm,opacity:0.35}}>→</span>
+              </button>
             ))}
           </div>
         )}
@@ -295,8 +300,9 @@ function InvestorPanel({ inv, onClose, funds=[], onSelectFund }) {
         {linkedFund && (
           <div style={{marginBottom:20}}>
             <EyebrowLabel marginBottom={10}>ABOUT THEIR FUND</EyebrowLabel>
-            <div onClick={()=>onSelectFund&&onSelectFund(linkedFund)}
-              style={{padding:'14px 16px',border:`1px solid ${color.borderSoft}`,cursor:'pointer',background:color.cream}}
+            <button type="button" onClick={()=>onSelectFund&&onSelectFund(linkedFund)}
+              aria-label={`View fund ${linkedFund.name}`}
+              style={{...buttonReset,padding:'14px 16px',border:`1px solid ${color.borderSoft}`,cursor:'pointer',background:color.cream}}
               onMouseEnter={e=>e.currentTarget.style.background=color.bgSubtle}
               onMouseLeave={e=>e.currentTarget.style.background=color.cream}>
               <div style={{fontSize:fontSize.sm,letterSpacing:letterSpacing.wide,textTransform:'uppercase',
@@ -314,7 +320,7 @@ function InvestorPanel({ inv, onClose, funds=[], onSelectFund }) {
                 {linkedFund.region && <span>{linkedFund.region}</span>}
               </div>
               <div style={{fontSize:fontSize.sm,opacity:0.3,marginTop:8,textAlign:'right'}}>View Fund →</div>
-            </div>
+            </button>
           </div>
         )}
         <KeyValueGrid pairs={[['Region',inv.region],['City',inv.city]]} />
@@ -365,7 +371,7 @@ function FundCard({ fund, onClick }) {
   const typeColor = TYPE_COLORS[fund.type]||color.muted;
   const bucket = fundSizeBucket(fund.size);
   return (
-    <div onClick={()=>onClick(fund)} {...hoverProps} style={cardStyle}>
+    <button type="button" onClick={()=>onClick(fund)} {...hoverProps} style={cardStyle} aria-label={`View details for ${fund.name}`}>
       <div style={{display:'flex',justifyContent:'space-between',marginBottom:9}}>
         <span style={{fontSize:fontSize.sm,letterSpacing:letterSpacing.wide,textTransform:'uppercase',color:hov?color.hoverText:typeColor,fontWeight:500}}>{fund.type}</span>
         <span style={{fontSize:fontSize.sm,opacity:0.5}}>{fund.region}</span>
@@ -382,7 +388,7 @@ function FundCard({ fund, onClick }) {
         {bucket!=='N/A' && <span>{bucket}</span>}
         {fund.vintage && <span>Est. {fund.vintage}</span>}
       </div>
-    </div>
+    </button>
   );
 }
 
@@ -393,9 +399,9 @@ function InvestorCard({ inv, funds=[], onClick }) {
   const fundType = fundData?.type || 'Venture Fund';
   const typeColor = TYPE_COLORS[fundType] || color.muted;
   return (
-    <div onClick={()=>onClick(inv)} {...hoverProps} style={cardStyle}>
+    <button type="button" onClick={()=>onClick(inv)} {...hoverProps} style={cardStyle} aria-label={`View details for ${inv.name}`}>
       <div style={{display:'flex',alignItems:'center',gap:14,marginBottom:12}}>
-        <div style={{width:42,height:42,borderRadius:'50%',background:hov?color.cream:color.ink,
+        <div aria-hidden="true" style={{width:42,height:42,borderRadius:'50%',background:hov?color.cream:color.ink,
           display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,transition:'all 0.12s'}}>
           <span style={{color:hov?color.ink:color.cream,fontFamily:font.display,fontWeight:800,fontSize:fontSize.lg2,transition:'all 0.12s'}}>{(inv.name||'?')[0]}</span>
         </div>
@@ -412,7 +418,7 @@ function InvestorCard({ inv, funds=[], onClick }) {
           {inv.thesis}
         </div>
       )}
-    </div>
+    </button>
   );
 }
 
@@ -421,7 +427,7 @@ function PartnerCard({ partner, onClick }) {
   const { hov, hoverProps, cardStyle } = useHoverCard();
   const catColor = PARTNER_COLORS[partner.category]||color.muted;
   return (
-    <div onClick={()=>onClick(partner)} {...hoverProps} style={cardStyle}>
+    <button type="button" onClick={()=>onClick(partner)} {...hoverProps} style={cardStyle} aria-label={`View details for ${partner.name}`}>
       <div style={{display:'flex',justifyContent:'space-between',marginBottom:9}}>
         <span style={{fontSize:fontSize.sm,letterSpacing:letterSpacing.wide,textTransform:'uppercase',color:hov?color.hoverText:catColor,fontWeight:500}}>{partner.category}</span>
         <span style={{fontSize:fontSize.sm,opacity:0.5}}>{partner.region}</span>
@@ -434,7 +440,7 @@ function PartnerCard({ partner, onClick }) {
         </div>
       )}
       {partner.contact && <div style={{fontSize:fontSize.smd,opacity:0.45}}>Contact: {partner.contact}</div>}
-    </div>
+    </button>
   );
 }
 
@@ -444,12 +450,12 @@ function FilterBar({ search, setSearch, filters, hasFilters, onClearAll, resultC
     <div className="en-filterbar" style={{padding:'12px 48px',borderBottom:`1px solid ${color.border}`,display:'flex',
       gap:8,alignItems:'center',flexWrap:'wrap',background:color.bgSubtle}}>
       <div style={{position:'relative',display:'flex',alignItems:'center'}}>
-        <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search…"
+        <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search…" aria-label="Search"
           style={{background:'transparent',border:`1px solid ${color.ink}`,padding:'7px 32px 7px 12px',
             fontSize:fontSize.smd,fontFamily:font.mono,outline:'none',minWidth:220,color:color.ink}} />
         {search && (
-          <button onClick={()=>setSearch('')} style={{position:'absolute',right:8,background:'none',
-            border:'none',cursor:'pointer',fontSize:fontSize.lg2,lineHeight:1,color:color.mutedSoft,padding:0,outline:'none',
+          <button type="button" onClick={()=>setSearch('')} aria-label="Clear search" style={{position:'absolute',right:8,background:'none',
+            border:'none',cursor:'pointer',fontSize:fontSize.lg2,lineHeight:1,color:color.mutedSoft,padding:0,
             display:'flex',alignItems:'center',justifyContent:'center'}}>×</button>
         )}
       </div>
@@ -476,7 +482,7 @@ function CardGrid({ items, renderCard, loading, emptyMsg='NO RESULTS' }) {
     <div className="en-card-grid" style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))',
       border:`1px solid ${color.ink}`,borderBottom:'none',borderRight:'none'}}>
       {items.map((item,i) => (
-        <div key={item.id||i} style={{borderBottom:`1px solid ${color.ink}`,borderRight:`1px solid ${color.ink}`}}>
+        <div key={item.id||i} style={{borderBottom:`1px solid ${color.ink}`,borderRight:`1px solid ${color.ink}`,display:'flex'}}>
           {renderCard(item)}
         </div>
       ))}
@@ -567,13 +573,17 @@ function CapitalTab({ funds, investors, loading }) {
 }
 
 // ─── PARTNERS TAB ─────────────────────────────────────────────────────────────
-function PartnersTab({ partners, loading }) {
+// Every category we vet partners for, regardless of whether any are on file
+// yet — an empty category still needs to show up so the directory never
+// looks incomplete or broken. Order matches PARTNER_COLORS.
+const PARTNER_CATEGORIES = Object.keys(PARTNER_COLORS);
+
+function PartnersTab({ partners, loading, onRequestReferral }) {
   const [catSel,setCat]        = useState([]);
   const [regionSel,setReg]     = useState([]);
   const [search,setSearch]     = useState('');
   const [selected,setSelected] = useState(null);
 
-  const categories = [...new Set(partners.map(p=>p.category).filter(Boolean))].sort();
   const hasFilters = !!(search||catSel.length||regionSel.length);
   const clearAll = ()=>{ setSearch(''); setCat([]); setReg([]); };
 
@@ -583,21 +593,58 @@ function PartnersTab({ partners, loading }) {
     (!search || [p.name,p.description,p.category,p.city,p.contact].join(' ').toLowerCase().includes(search.toLowerCase()))
   );
 
+  const visibleCategories = catSel.length ? PARTNER_CATEGORIES.filter(c=>catSel.includes(c)) : PARTNER_CATEGORIES;
+
   return (
     <div>
       <FilterBar
         search={search} setSearch={setSearch}
         filters={<>
-          <MultiSelect label="Category" options={categories} selected={catSel}    onChange={setCat} />
+          <MultiSelect label="Category" options={PARTNER_CATEGORIES} selected={catSel} onChange={setCat} />
           <MultiSelect label="Region"   options={REGIONS}    selected={regionSel} onChange={setReg} />
         </>}
         hasFilters={hasFilters} onClearAll={clearAll}
         resultCount={filtered.length} loading={loading}
       />
       <div className="en-tab-content" style={{padding:'28px 48px'}}>
-        <CardGrid items={filtered} loading={loading}
-          renderCard={p=><PartnerCard partner={p} onClick={setSelected} />}
-          emptyMsg="NO PARTNERS" />
+        {loading ? (
+          <div style={{textAlign:'center',padding:80,fontSize:fontSize.smd,letterSpacing:letterSpacing.wide,opacity:0.35}}>FETCHING LIVE DATA…</div>
+        ) : (
+          <div style={{display:'flex',flexDirection:'column',gap:32}}>
+            {visibleCategories.map(category => {
+              const inCategory = partners.filter(p=>p.category===category);
+              const visible = filtered.filter(p=>p.category===category);
+              // A category with zero partners on file at all gets an open-seat
+              // placeholder. A category that has partners, but none matching
+              // the current region/search filters, is hidden rather than
+              // shown empty — that's ordinary filtering, not a real vacancy.
+              if (inCategory.length===0) {
+                return (
+                  <section key={category} aria-label={category}>
+                    <EyebrowLabel style={{color:PARTNER_COLORS[category]||color.muted}}>{category}</EyebrowLabel>
+                    <div className="en-card-grid" style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))',
+                      border:`1px solid ${color.ink}`,borderBottom:'none',borderRight:'none'}}>
+                      <div style={{borderBottom:`1px solid ${color.ink}`,borderRight:`1px solid ${color.ink}`,display:'flex'}}>
+                        <OpenSeatCard category={category} onRequestReferral={onRequestReferral} />
+                      </div>
+                    </div>
+                  </section>
+                );
+              }
+              if (visible.length===0) return null;
+              return (
+                <section key={category} aria-label={category}>
+                  <EyebrowLabel style={{color:PARTNER_COLORS[category]||color.muted}}>{category}</EyebrowLabel>
+                  <CardGrid items={visible} loading={false}
+                    renderCard={p=><PartnerCard partner={p} onClick={setSelected} />} />
+                </section>
+              );
+            })}
+            {visibleCategories.every(c => partners.filter(p=>p.category===c).length>0 && filtered.filter(p=>p.category===c).length===0) && (
+              <div style={{textAlign:'center',padding:80,fontSize:fontSize.smd,letterSpacing:letterSpacing.wide,opacity:0.35}}>NO PARTNERS MATCH THESE FILTERS</div>
+            )}
+          </div>
+        )}
       </div>
       {selected && <PartnerPanel partner={selected} onClose={()=>setSelected(null)} />}
     </div>
@@ -769,13 +816,12 @@ function PulseTab({ events, dispatches, loading }) {
                         {new Date(d.date).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric',timeZone:'UTC'})}
                       </span>}
                     </div>
-                    <h3 onClick={()=>setExpanded(isExp?null:d.id)}
-                      style={{fontFamily:font.display,fontSize:fontSize.xxl,fontWeight:800,
-                        margin:'0 0 12px',lineHeight:1.2,cursor:'pointer'}}>
+                    <h3 style={{fontFamily:font.display,fontSize:fontSize.xxl,fontWeight:800,
+                        margin:'0 0 12px',lineHeight:1.2}}>
                       {d.title}
                     </h3>
                     {d.body && (
-                      <div style={{fontSize:fontSize.basemdPlus,lineHeight:1.8,color:color.dispatchBody,
+                      <div id={`dispatch-body-${d.id}`} style={{fontSize:fontSize.basemdPlus,lineHeight:1.8,color:color.dispatchBody,
                         display:isExp?'block':'-webkit-box',
                         WebkitLineClamp:isExp?undefined:4,
                         WebkitBoxOrient:isExp?undefined:'vertical',
@@ -783,9 +829,10 @@ function PulseTab({ events, dispatches, loading }) {
                         {d.body}
                       </div>
                     )}
-                    <button onClick={()=>setExpanded(isExp?null:d.id)}
+                    <button type="button" onClick={()=>setExpanded(isExp?null:d.id)}
+                      aria-expanded={isExp} aria-controls={`dispatch-body-${d.id}`}
                       style={{marginTop:12,background:'none',border:'none',padding:0,cursor:'pointer',
-                        fontSize:fontSize.sm,letterSpacing:letterSpacing.wide,textTransform:'uppercase',color:color.muted,outline:'none'}}>
+                        fontSize:fontSize.sm,letterSpacing:letterSpacing.wide,textTransform:'uppercase',color:color.muted}}>
                       {isExp?'COLLAPSE ↑':'READ MORE →'}
                     </button>
                   </div>
@@ -796,6 +843,213 @@ function PulseTab({ events, dispatches, loading }) {
         </div>
       )}
     </div>
+  );
+}
+
+// ─── LEGAL PAGES ──────────────────────────────────────────────────────────────
+const LEGAL_EFFECTIVE_DATE = 'July 29, 2026';
+const LEGAL_CONTACT_EMAIL = 'hello@emerging.network';
+
+function LegalPage({ title, onBack, children }) {
+  return (
+    <div style={{padding:'40px 48px 80px',maxWidth:760,margin:'0 auto'}}>
+      <button type="button" onClick={onBack} style={{
+        ...buttonReset,width:'auto',background:'none',border:'none',padding:0,marginBottom:28,
+        color:color.muted,fontFamily:font.mono,fontSize:fontSize.sm,letterSpacing:letterSpacing.wide,
+        textTransform:'uppercase',cursor:'pointer',display:'flex',alignItems:'center',gap:6,
+      }}>
+        ← Back to directory
+      </button>
+      <h1 style={{fontFamily:font.display,fontSize:fontSize.display3,fontWeight:800,margin:'0 0 8px',lineHeight:1.15}}>{title}</h1>
+      <div style={{fontSize:fontSize.smd,opacity:0.45,marginBottom:36}}>Effective {LEGAL_EFFECTIVE_DATE}</div>
+      <article style={{fontSize:fontSize.base,lineHeight:1.8,color:color.ink}}>
+        {children}
+      </article>
+    </div>
+  );
+}
+
+function LegalSection({ heading, children }) {
+  return (
+    <section style={{marginBottom:28}}>
+      <h2 style={{fontFamily:font.display,fontSize:fontSize.lg,fontWeight:700,margin:'0 0 10px'}}>{heading}</h2>
+      {children}
+    </section>
+  );
+}
+
+function TermsPage({ onBack }) {
+  return (
+    <LegalPage title="Terms of Service" onBack={onBack}>
+      <LegalSection heading="1. Acceptance of terms">
+        <p>By accessing or using Emerging Networks (the "Service"), you agree to be bound by these Terms
+        of Service ("Terms"). If you do not agree to these Terms, do not use the Service. We may update
+        these Terms from time to time; continued use of the Service after changes take effect constitutes
+        acceptance of the revised Terms.</p>
+      </LegalSection>
+
+      <LegalSection heading="2. Description of the service">
+        <p>Emerging Networks is a curated, editorially-assembled directory of venture funds, investors,
+        ecosystem service partners, and related events across emerging U.S. startup markets. The Service
+        is provided for general informational purposes only.</p>
+      </LegalSection>
+
+      <LegalSection heading="3. No investment, legal, or professional advice">
+        <p>Nothing on the Service constitutes investment, financial, legal, tax, or other professional
+        advice, nor is it a recommendation, solicitation, or offer to buy or sell any security or to
+        engage any listed partner. You are solely responsible for conducting your own due diligence
+        before relying on, contacting, or entering into any relationship with any fund, investor, or
+        partner listed on the Service. We are not a registered investment adviser, broker-dealer, or
+        placement agent.</p>
+      </LegalSection>
+
+      <LegalSection heading="4. No warranty on accuracy of listings">
+        <p>Directory entries are compiled from public sources and information submitted directly to us.
+        We make reasonable efforts to keep listings current, but we do not guarantee the accuracy,
+        completeness, or timeliness of any listing, and we do not endorse any fund, investor, partner,
+        or event that appears on the Service. Inclusion in the directory is not a certification,
+        recommendation, or guarantee of quality, legitimacy, or performance.</p>
+      </LegalSection>
+
+      <LegalSection heading="5. User submissions">
+        <p>If you submit information through our "Get Listed" form or otherwise (including a request to
+        refer a partner), you represent that the information you provide is accurate and that you have
+        the right to submit it. You grant us a non-exclusive, royalty-free license to review, edit, and
+        publish that information as part of the directory. We reserve the right to decline, edit, or
+        remove any submission or listing at our sole discretion, for any reason, at any time.</p>
+      </LegalSection>
+
+      <LegalSection heading="6. Acceptable use">
+        <p>You agree not to: (a) scrape, harvest, or bulk-extract data from the Service by automated
+        means without our prior written consent; (b) misrepresent your identity or affiliation when
+        submitting information; (c) use the Service to transmit unlawful, harassing, or fraudulent
+        content; or (d) attempt to interfere with or disrupt the Service's operation or security.</p>
+      </LegalSection>
+
+      <LegalSection heading="7. Third-party links and services">
+        <p>The Service contains links to third-party websites (fund and partner websites, LinkedIn
+        profiles, event registration pages, and similar) that we do not control. We are not responsible
+        for the content, policies, or practices of any third-party site. Your use of any linked site is
+        governed by that site's own terms and privacy policy.</p>
+      </LegalSection>
+
+      <LegalSection heading="8. Intellectual property">
+        <p>The Service's design, text, graphics, and compilation of directory data (as a curated
+        selection and arrangement) are owned by us or our licensors and are protected by applicable
+        intellectual property laws. You may not reproduce, redistribute, or create derivative works
+        from the Service without our prior written permission, except for personal, non-commercial
+        reference.</p>
+      </LegalSection>
+
+      <LegalSection heading="9. Disclaimer of warranties">
+        <p>THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE," WITHOUT WARRANTIES OF ANY KIND, EXPRESS OR
+        IMPLIED, INCLUDING WITHOUT LIMITATION WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+        PURPOSE, NON-INFRINGEMENT, OR THAT THE SERVICE WILL BE UNINTERRUPTED, SECURE, OR ERROR-FREE.</p>
+      </LegalSection>
+
+      <LegalSection heading="10. Limitation of liability">
+        <p>TO THE FULLEST EXTENT PERMITTED BY LAW, EMERGING NETWORKS AND ITS OPERATORS SHALL NOT BE
+        LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, OR ANY LOSS OF
+        PROFITS, REVENUE, DATA, OR BUSINESS OPPORTUNITY, ARISING OUT OF OR RELATING TO YOUR USE OF THE
+        SERVICE OR ANY DECISION MADE OR ACTION TAKEN IN RELIANCE ON INFORMATION FOUND THROUGH THE
+        SERVICE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.</p>
+      </LegalSection>
+
+      <LegalSection heading="11. Termination">
+        <p>We may suspend or terminate your access to the Service at any time, without notice, for
+        conduct that we believe violates these Terms or is otherwise harmful to other users, us, or
+        third parties.</p>
+      </LegalSection>
+
+      <LegalSection heading="12. Governing law">
+        <p>These Terms are governed by the laws of the State of Louisiana, without regard to its
+        conflict-of-laws principles, and any dispute arising from these Terms or the Service shall be
+        subject to the exclusive jurisdiction of the state and federal courts located in Louisiana.</p>
+      </LegalSection>
+
+      <LegalSection heading="13. Contact">
+        <p>Questions about these Terms can be sent to <a href={`mailto:${LEGAL_CONTACT_EMAIL}`} style={{color:color.brandRed,textDecoration:'underline'}}>{LEGAL_CONTACT_EMAIL}</a>.</p>
+      </LegalSection>
+    </LegalPage>
+  );
+}
+
+function PrivacyPage({ onBack }) {
+  return (
+    <LegalPage title="Privacy Policy" onBack={onBack}>
+      <LegalSection heading="1. Overview">
+        <p>This Privacy Policy explains what information Emerging Networks ("we," "us") collects when
+        you use this site, how we use it, and the choices you have. We collect the minimum information
+        needed to operate a curated directory and to review submissions for inclusion in it.</p>
+      </LegalSection>
+
+      <LegalSection heading="2. Information we collect">
+        <p><strong>Information you submit.</strong> If you use the "Get Listed" form or a "Refer a
+        partner" prompt, we collect the name, email address, organization name, region, and message you
+        provide. We use this solely to evaluate your submission for inclusion in the directory and to
+        respond to you if needed.</p>
+        <p><strong>Automatically collected information.</strong> Like most websites, our hosting and
+        analytics providers may automatically log standard technical data such as pages visited,
+        referring URLs, browser type, device type, and approximate location derived from IP address.
+        We use this in aggregate to understand site usage and are not able to identify you individually
+        from it.</p>
+      </LegalSection>
+
+      <LegalSection heading="3. How we use information">
+        <ul style={{paddingLeft:20,margin:0}}>
+          <li>To review and respond to directory submission and partner-referral requests</li>
+          <li>To maintain, secure, and improve the Service</li>
+          <li>To understand aggregate usage patterns of the Service</li>
+        </ul>
+        <p style={{marginTop:12}}>We do not sell your personal information, and we do not use form
+        submissions for advertising or marketing outreach beyond communicating with you about your own
+        submission.</p>
+      </LegalSection>
+
+      <LegalSection heading="4. Third-party service providers">
+        <p>We use the following third-party services to operate the Service, each of which processes
+        data on our behalf under its own privacy and security practices:</p>
+        <ul style={{paddingLeft:20,margin:'8px 0 0'}}>
+          <li><strong>Airtable</strong> — stores directory data and form submissions</li>
+          <li><strong>Vercel</strong> — hosts the Service and may collect aggregate, privacy-preserving
+          analytics (page views and performance metrics, not tied to an identified individual)</li>
+        </ul>
+      </LegalSection>
+
+      <LegalSection heading="5. Data retention">
+        <p>We retain submission data for as long as reasonably necessary to evaluate it and, if
+        accepted, to maintain the resulting directory listing. You may request deletion at any time
+        (see Section 7).</p>
+      </LegalSection>
+
+      <LegalSection heading="6. Cookies">
+        <p>The Service does not use advertising or tracking cookies. Our hosting provider's analytics
+        may use minimal, privacy-preserving techniques that do not rely on persistent cross-site
+        identifiers.</p>
+      </LegalSection>
+
+      <LegalSection heading="7. Your rights and choices">
+        <p>You may request to access, correct, or delete personal information you've submitted to us,
+        or ask us not to include or to remove a listing, by emailing{' '}
+        <a href={`mailto:${LEGAL_CONTACT_EMAIL}`} style={{color:color.brandRed,textDecoration:'underline'}}>{LEGAL_CONTACT_EMAIL}</a>.
+        We will respond within a reasonable time.</p>
+      </LegalSection>
+
+      <LegalSection heading="8. Children's privacy">
+        <p>The Service is not directed to children under 13, and we do not knowingly collect personal
+        information from children under 13.</p>
+      </LegalSection>
+
+      <LegalSection heading="9. Changes to this policy">
+        <p>We may update this Privacy Policy from time to time. Material changes will be reflected by
+        updating the effective date at the top of this page.</p>
+      </LegalSection>
+
+      <LegalSection heading="10. Contact">
+        <p>Questions about this Privacy Policy can be sent to{' '}
+        <a href={`mailto:${LEGAL_CONTACT_EMAIL}`} style={{color:color.brandRed,textDecoration:'underline'}}>{LEGAL_CONTACT_EMAIL}</a>.</p>
+      </LegalSection>
+    </LegalPage>
   );
 }
 
@@ -893,12 +1147,13 @@ function MapTab({ funds, mapPaths }) {
         {/* Legend */}
         <div className="en-map-legend" style={{display:'flex',gap:14,flexWrap:'wrap',marginTop:10,flexShrink:0}}>
           {REGIONS.map(r=>(
-            <div key={r} onClick={()=>setActive(activeRegion===r?null:r)}
-              style={{display:'flex',alignItems:'center',gap:5,fontSize:10,cursor:'pointer',
+            <button type="button" key={r} onClick={()=>setActive(activeRegion===r?null:r)}
+              aria-pressed={activeRegion===r}
+              style={{...buttonReset,width:'auto',background:'none',border:'none',padding:0,display:'flex',alignItems:'center',gap:5,fontSize:10,cursor:'pointer',
                 opacity:!activeRegion||activeRegion===r?0.75:0.25,transition:'opacity 0.15s'}}>
-              <div style={{width:10,height:10,background:REGION_COLORS[r],flexShrink:0}} />
+              <span aria-hidden="true" style={{width:10,height:10,background:REGION_COLORS[r],flexShrink:0}} />
               {r}
-            </div>
+            </button>
           ))}
         </div>
       </div>
@@ -917,16 +1172,17 @@ function MapTab({ funds, mapPaths }) {
                 </div>
                 <div style={{fontSize:10,opacity:0.4}}>{regionFunds.length} fund{regionFunds.length!==1?'s':''}</div>
               </div>
-              <button onClick={()=>setActive(null)} style={{background:'none',border:'1px solid #bbb',
-                cursor:'pointer',width:26,height:26,fontSize:14,color:'#1a1a1a',outline:'none',
+              <button type="button" onClick={()=>setActive(null)} aria-label="Close region details" style={{background:'none',border:'1px solid #bbb',
+                cursor:'pointer',width:26,height:26,fontSize:14,color:'#1a1a1a',
                 display:'flex',alignItems:'center',justifyContent:'center'}}>×</button>
             </div>
             <div style={{flex:1,overflowY:'auto'}}>
               {regionFunds.map(f=>{
                 const c = TYPE_COLORS[f.type]||'#888';
                 return (
-                  <div key={f.id} onClick={()=>setSelected(f)}
-                    style={{padding:'14px 20px',borderBottom:'1px solid #d4cfc7',cursor:'pointer'}}
+                  <button type="button" key={f.id} onClick={()=>setSelected(f)}
+                    aria-label={`View fund ${f.name}`}
+                    style={{...buttonReset,background:'none',border:'none',padding:'14px 20px',borderBottom:'1px solid #d4cfc7',cursor:'pointer'}}
                     onMouseEnter={e=>e.currentTarget.style.background='#e5dfd6'}
                     onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
                     <div style={{fontSize:9.5,letterSpacing:2,textTransform:'uppercase',color:c,marginBottom:3,fontWeight:500}}>{f.type}</div>
@@ -935,7 +1191,7 @@ function MapTab({ funds, mapPaths }) {
                       {f.city && <span>{f.city}</span>}
                       {f.stage && <span>{f.stage}</span>}
                     </div>
-                  </div>
+                  </button>
                 );
               })}
             </div>
@@ -1076,6 +1332,9 @@ export default function App() {
         ::-webkit-scrollbar-thumb { background:${color.ink}; }
         input::placeholder { opacity:0.38; }
         button:focus { outline:none; }
+        button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+          outline: 2px solid ${color.brandRed} !important; outline-offset: 2px;
+        }
         button:active { -webkit-tap-highlight-color: transparent; }
         a { text-decoration:none; }
         
@@ -1169,10 +1428,11 @@ export default function App() {
         </div>
 
         {/* Hamburger — hidden on desktop via CSS, visible on mobile */}
-        <button className="en-hamburger" onClick={()=>setNavOpen(o=>!o)}
+        <button type="button" className="en-hamburger" onClick={()=>setNavOpen(o=>!o)}
+          aria-label="Toggle navigation" aria-expanded={navOpen}
           style={{display:'none',alignItems:'center',justifyContent:'center',
             padding:'0 18px',background:'none',border:'none',borderLeft:`1px solid ${color.ink}`,
-            cursor:'pointer',fontSize:fontSize.xxl,color:color.ink,outline:'none',flexShrink:0}}>
+            cursor:'pointer',fontSize:fontSize.xxl,color:color.ink,flexShrink:0}}>
           {navOpen ? '×' : '≡'}
         </button>
 
@@ -1198,22 +1458,24 @@ export default function App() {
         {/* Nav tabs */}
         <nav className={`en-header-nav${navOpen?' open':''}`} style={{display:'flex',alignItems:'stretch'}}>
           {[['capital','CAPITAL'],['partners','PARTNERS'],['pulse','PULSE'],['map','MAP']].map(([t,l])=>(
-            <button key={t} onClick={()=>{setTab(t);setNavOpen(false);}} style={{
+            <button type="button" key={t} onClick={()=>{setTab(t);setNavOpen(false);}} aria-current={tab===t?'page':undefined} style={{
               padding:'0 26px',
               background:tab===t?color.ink:'transparent',
               color:tab===t?color.cream:color.ink,
               border:'none',borderLeft:`1px solid ${color.ink}`,
               cursor:'pointer',fontSize:fontSize.sm,letterSpacing:letterSpacing.widest,
-              fontFamily:font.mono,transition:'all 0.12s',fontWeight:500,outline:'none',
+              fontFamily:font.mono,transition:'all 0.12s',fontWeight:500,
             }}>{l}</button>
           ))}
         </nav>
       </header>
 
       {tab==='capital'  && <CapitalTab  funds={funds} investors={investors} loading={loading} />}
-      {tab==='partners' && <PartnersTab partners={partners} loading={loading} />}
+      {tab==='partners' && <PartnersTab partners={partners} loading={loading} onRequestReferral={()=>setShowContact(true)} />}
       {tab==='pulse'    && <PulseTab    events={events} dispatches={dispatch} loading={loading} />}
       {tab==='map'      && <MapTab      funds={funds} mapPaths={mapPaths} />}
+      {tab==='terms'    && <TermsPage   onBack={()=>setTab('capital')} />}
+      {tab==='privacy'  && <PrivacyPage onBack={()=>setTab('capital')} />}
 
       {/* ── Footer ── */}
       <footer style={{borderTop:`2px solid ${color.ink}`,background:color.ink,color:color.cream,fontFamily:font.mono}}>
@@ -1283,13 +1545,21 @@ export default function App() {
 
         {/* Bottom bar with contact */}
         <div className="en-footer-bottom" style={{padding:'16px 64px',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:16}}>
-          <div style={{fontSize:fontSize.sm,opacity:0.3}}>
-            © {new Date().getFullYear()} Emerging Networks. Curated, not scraped.
+          <div style={{display:'flex',alignItems:'center',gap:14,flexWrap:'wrap',fontSize:fontSize.sm,opacity:0.4}}>
+            <span style={{opacity:0.75}}>© {new Date().getFullYear()} Emerging Networks. Curated, not scraped.</span>
+            <button type="button" onClick={()=>setTab('terms')} style={{...buttonReset,width:'auto',background:'none',border:'none',padding:0,
+              color:color.cream,textDecoration:'underline',cursor:'pointer',fontFamily:font.mono,fontSize:fontSize.sm}}>
+              Terms
+            </button>
+            <button type="button" onClick={()=>setTab('privacy')} style={{...buttonReset,width:'auto',background:'none',border:'none',padding:0,
+              color:color.cream,textDecoration:'underline',cursor:'pointer',fontFamily:font.mono,fontSize:fontSize.sm}}>
+              Privacy
+            </button>
           </div>
-          <button onClick={()=>setShowContact(true)} style={{
+          <button type="button" onClick={()=>setShowContact(true)} style={{
             background:color.brandRed,color:color.cream,border:'none',padding:'8px 16px',
             fontSize:fontSize.xs,letterSpacing:letterSpacing.wide,textTransform:'uppercase',cursor:'pointer',
-            fontFamily:font.mono,outline:'none'
+            fontFamily:font.mono
           }}>
             GET LISTED ↗
           </button>
@@ -1300,65 +1570,73 @@ export default function App() {
       </footer>
 
       {/* Contact Modal */}
-      {showContact && (
-        <div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'rgba(0,0,0,0.6)',
-          display:'flex',alignItems:'center',justifyContent:'center',zIndex:1000}}>
-          <div className="en-modal-inner" style={{background:color.cream,padding:'40px',borderRadius:radius.none,maxWidth:500,width:'90%',maxHeight:'90vh',overflowY:'auto'}}>
-            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:24}}>
-              <h2 style={{margin:0,fontFamily:font.display,fontSize:fontSize.display1,fontWeight:800}}>Get Listed</h2>
-              <CloseButton onClick={()=>setShowContact(false)} />
-            </div>
-            <p style={{fontSize:fontSize.base,lineHeight:1.6,marginBottom:24,opacity:0.6}}>
-              Are you a fund, investor, partner, or event organizer in the emerging capital space? Submit your information below and we'll review it for inclusion in our curated directory.
-            </p>
-            <form onSubmit={async (e)=>{
-              e.preventDefault();
-              const form = e.currentTarget;
-              const data = {
-                name:         form.name.value,
-                email:        form.email.value,
-                type:         form.type.value,
-                organization: form.organization.value,
-                region:       form.region.value,
-                message:      form.message.value,
-              };
-              try {
-                const res = await fetch('/api/contact', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify(data),
-                });
-                if (!res.ok) throw new Error('Submit failed');
-                alert('Thank you! We\'ll review your submission shortly.');
-                form.reset();
-                setShowContact(false);
-              } catch(err) {
-                alert('Error submitting form. Please try again.');
-              }
-            }} style={{display:'flex',flexDirection:'column',gap:16}}>
-              <input type="text" name="name" placeholder="Name" required style={{padding:'10px 12px',border:`1px solid ${color.border}`,fontFamily:font.mono,fontSize:fontSize.smd,outline:'none'}} />
-              <input type="email" name="email" placeholder="Email" required style={{padding:'10px 12px',border:`1px solid ${color.border}`,fontFamily:font.mono,fontSize:fontSize.smd,outline:'none'}} />
-              <select name="type" required style={{padding:'10px 12px',border:`1px solid ${color.border}`,fontFamily:font.mono,fontSize:fontSize.smd,outline:'none',background:color.white}}>
-                <option value="">Select type…</option>
-                <option value="Fund">Fund</option>
-                <option value="Investor">Investor</option>
-                <option value="Partner">Partner/Service</option>
-                <option value="Event">Event</option>
-                <option value="Other">Other</option>
-              </select>
-              <input type="text" name="organization" placeholder="Organization/Fund Name" required style={{padding:'10px 12px',border:`1px solid ${color.border}`,fontFamily:font.mono,fontSize:fontSize.smd,outline:'none'}} />
-              <select name="region" required style={{padding:'10px 12px',border:`1px solid ${color.border}`,fontFamily:font.mono,fontSize:fontSize.smd,outline:'none',background:color.white}}>
-                <option value="">Select region…</option>
-                {REGIONS.map(r=><option key={r} value={r}>{r}</option>)}
-              </select>
-              <textarea name="message" placeholder="Tell us about yourself…" style={{padding:'10px 12px',border:`1px solid ${color.border}`,fontFamily:font.mono,fontSize:fontSize.smd,outline:'none',minHeight:100,resize:'none'}} />
-              <button type="submit" style={{background:color.ink,color:color.cream,border:'none',padding:'10px',fontFamily:font.mono,fontSize:fontSize.sm,letterSpacing:letterSpacing.wide,textTransform:'uppercase',cursor:'pointer',outline:'none'}}>
-                SUBMIT
-              </button>
-            </form>
-          </div>
+      {showContact && <ContactModal onClose={()=>setShowContact(false)} />}
+    </div>
+  );
+}
+
+// ─── Contact / "Get Listed" modal ──────────────────────────────────────────────
+function ContactModal({ onClose }) {
+  useEscapeToClose(onClose);
+  return (
+    <div onClick={onClose} style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'rgba(0,0,0,0.6)',
+      display:'flex',alignItems:'center',justifyContent:'center',zIndex:1000}}>
+      <div className="en-modal-inner" role="dialog" aria-modal="true" aria-labelledby="contact-modal-title"
+        onClick={e=>e.stopPropagation()}
+        style={{background:color.cream,padding:'40px',borderRadius:radius.none,maxWidth:500,width:'90%',maxHeight:'90vh',overflowY:'auto'}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:24}}>
+          <h2 id="contact-modal-title" style={{margin:0,fontFamily:font.display,fontSize:fontSize.display1,fontWeight:800}}>Get Listed</h2>
+          <CloseButton onClick={onClose} />
         </div>
-      )}
+        <p style={{fontSize:fontSize.base,lineHeight:1.6,marginBottom:24,opacity:0.6}}>
+          Are you a fund, investor, partner, or event organizer in the emerging capital space? Submit your information below and we'll review it for inclusion in our curated directory.
+        </p>
+        <form onSubmit={async (e)=>{
+          e.preventDefault();
+          const form = e.currentTarget;
+          const data = {
+            name:         form.name.value,
+            email:        form.email.value,
+            type:         form.type.value,
+            organization: form.organization.value,
+            region:       form.region.value,
+            message:      form.message.value,
+          };
+          try {
+            const res = await fetch('/api/contact', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(data),
+            });
+            if (!res.ok) throw new Error('Submit failed');
+            alert('Thank you! We\'ll review your submission shortly.');
+            form.reset();
+            onClose();
+          } catch(err) {
+            alert('Error submitting form. Please try again.');
+          }
+        }} style={{display:'flex',flexDirection:'column',gap:16}}>
+          <input type="text" name="name" placeholder="Name" aria-label="Name" required style={{padding:'10px 12px',border:`1px solid ${color.border}`,fontFamily:font.mono,fontSize:fontSize.smd}} />
+          <input type="email" name="email" placeholder="Email" aria-label="Email" required style={{padding:'10px 12px',border:`1px solid ${color.border}`,fontFamily:font.mono,fontSize:fontSize.smd}} />
+          <select name="type" aria-label="Type" required style={{padding:'10px 12px',border:`1px solid ${color.border}`,fontFamily:font.mono,fontSize:fontSize.smd,background:color.white}}>
+            <option value="">Select type…</option>
+            <option value="Fund">Fund</option>
+            <option value="Investor">Investor</option>
+            <option value="Partner">Partner/Service</option>
+            <option value="Event">Event</option>
+            <option value="Other">Other</option>
+          </select>
+          <input type="text" name="organization" placeholder="Organization/Fund Name" aria-label="Organization or fund name" required style={{padding:'10px 12px',border:`1px solid ${color.border}`,fontFamily:font.mono,fontSize:fontSize.smd}} />
+          <select name="region" aria-label="Region" required style={{padding:'10px 12px',border:`1px solid ${color.border}`,fontFamily:font.mono,fontSize:fontSize.smd,background:color.white}}>
+            <option value="">Select region…</option>
+            {REGIONS.map(r=><option key={r} value={r}>{r}</option>)}
+          </select>
+          <textarea name="message" placeholder="Tell us about yourself…" aria-label="Message" style={{padding:'10px 12px',border:`1px solid ${color.border}`,fontFamily:font.mono,fontSize:fontSize.smd,minHeight:100,resize:'none'}} />
+          <button type="submit" style={{background:color.ink,color:color.cream,border:'none',padding:'10px',fontFamily:font.mono,fontSize:fontSize.sm,letterSpacing:letterSpacing.wide,textTransform:'uppercase',cursor:'pointer'}}>
+            SUBMIT
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
