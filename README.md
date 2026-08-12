@@ -1,28 +1,15 @@
 # emerging.network
 
-A curated directory of venture funds, investors, and ecosystem partners across emerging U.S. startup markets. Vite + React on the frontend, Airtable as the backend, Vercel for hosting.
+Most VC directories cover Silicon Valley and stop there. This one doesn't. Emerging Networks tracks the funds, investors, and ecosystem partners building startup activity outside the usual hubs, across regions like the Gulf South, the Southeast, and the Mountain West, where capital is thinner and harder to find.
 
-## Structure
+The directory has four parts. Capital lists funds and the people writing checks. Partners covers the lawyers, accountants, and other service providers founders actually need, including ones we haven't vetted yet, marked openly as open seats rather than left out. Pulse tracks events and short dispatches on what's happening in each region. Map gives a geographic view of where the capital actually sits.
 
-- `src/App.jsx` — the app: Capital, Partners, Pulse, and Map tabs, plus Terms/Privacy pages
-- `src/lib/tokens.js` — colors, type scale, spacing (single source of truth for styling)
-- `src/lib/components.jsx` — shared UI pieces (cards, panels, buttons) built from those tokens
-- `api/airtable.js` — proxies reads to Airtable so the token never reaches the browser
-- `api/contact.js` — handles "Get Listed" form submissions
-
-## Run locally
-
-```bash
-npm install
-npm run dev
-```
-
-Opens at `http://localhost:5173`. You'll need `AIRTABLE_BASE` and `AIRTABLE_TOKEN` set as environment variables for live data to load — the app still renders without them, just empty.
+Everything is built on Vite and React, with Airtable as the backend and Vercel for hosting. Listings live in Airtable, not in the code, so updating the directory doesn't require a deploy.
 
 ## Deploy
 
-Push to `main`. Vercel picks it up automatically if the GitHub integration is connected; `vercel.json` already points it at `npm run build` and `dist/`.
+Push to `main`. Vercel picks it up automatically through the GitHub integration.
 
 ## Editing content
 
-Directory data (funds, investors, partners, events, dispatches) lives in Airtable, not in the code. To change styling, edit `src/lib/tokens.js` first, not inline styles in `App.jsx`.
+Directory data (funds, investors, partners, events, dispatches) lives in Airtable. For styling changes, edit `src/lib/tokens.js` first rather than reaching for inline styles in `App.jsx`.
